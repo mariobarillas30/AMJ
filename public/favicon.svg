@@ -1,0 +1,27 @@
+<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="juda-fav-gold" x1="10" y1="10" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C88E3D" />
+      <stop offset="50%" stop-color="#A06726" />
+      <stop offset="100%" stop-color="#784717" />
+    </linearGradient>
+  </defs>
+
+  <rect width="120" height="120" rx="28" fill="#1C1917"/>
+
+  <!-- Melena y Contornos del León -->
+  <path d="M32 18 C38 12 46 10 52 14 C48 18 42 22 44 28 C46 32 50 34 52 38 C46 38 40 34 38 42 C36 48 42 52 44 56 C38 56 32 50 30 60 C28 68 34 72 36 78 C30 76 26 68 24 62 C22 54 26 46 28 38 C30 30 26 24 32 18 Z" fill="url(#juda-fav-gold)"/>
+  <path d="M20 34 C24 28 30 26 34 30 C30 34 26 38 28 44 C24 42 20 38 20 34 Z" fill="url(#juda-fav-gold)"/>
+  <path d="M16 48 C20 44 26 44 28 48 C24 52 20 56 18 64 C14 58 14 52 16 48 Z" fill="url(#juda-fav-gold)"/>
+  <path d="M18 68 C22 66 26 68 28 74 C24 78 20 84 22 92 C16 86 16 76 18 68 Z" fill="url(#juda-fav-gold)"/>
+
+  <!-- Ojo y Rostro -->
+  <path d="M42 42 C46 39 52 40 55 43 C52 44 47 43 45 46 C43 45 42 43 42 42 Z" fill="url(#juda-fav-gold)"/>
+  <circle cx="49" cy="46" r="2.5" fill="url(#juda-fav-gold)"/>
+  <path d="M52 56 C55 54 58 54 60 56 C57 59 55 60 52 56 Z" fill="url(#juda-fav-gold)"/>
+  <path d="M56 59 L56 63 M53 64 C56 66 57 66 60 64" stroke="url(#juda-fav-gold)" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Nota Musical blanca en dark theme -->
+  <ellipse cx="48" cy="94" rx="18" ry="13" transform="rotate(-25 48 94)" fill="#FFFFFF"/>
+  <path d="M57 90 L57 24 C57 18 62 14 68 14 C73 14 78 18 80 24 C74 20 68 22 64 28 L64 90 C62 90 59 90 57 90 Z" fill="#FFFFFF"/>
+</svg>

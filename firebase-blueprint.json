@@ -1,0 +1,354 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile in Academia Musical Judá with personal info, instrument, and Google linkage",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 200 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "role": { "type": "string", "enum": ["superadmin", "admin", "teacher", "student"] },
+        "phone": { "type": "string", "maxLength": 30 },
+        "instrument": { "type": "string", "maxLength": 60 },
+        "status": { "type": "string", "enum": ["active", "pending", "suspended"] },
+        "emailVerified": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 },
+        "googleConnected": { "type": "boolean" },
+        "bio": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["uid", "email", "role", "status"]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Authoritative directory record proving administrative and superadmin privileges",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 200 },
+        "role": { "type": "string", "enum": ["superadmin", "admin"] },
+        "grantedBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "TeacherRecord": {
+      "title": "TeacherRecord",
+      "description": "Authoritative directory record proving authorized music faculty privileges",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 200 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "specialties": { "type": "array" },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["uid", "email"]
+    },
+    "Course": {
+      "title": "Course",
+      "description": "Academic course offering in online, presencial, or virtual live modality",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "modality": { "type": "string", "enum": ["online_recorded", "presencial", "live_virtual", "hybrid"] },
+        "instrument": { "type": "string", "maxLength": 60 },
+        "teacherId": { "type": "string", "maxLength": 128 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "schedule": { "type": "string", "maxLength": 150 },
+        "meetUrl": { "type": "string", "maxLength": 300 },
+        "meetCode": { "type": "string", "maxLength": 50 },
+        "driveFolderId": { "type": "string", "maxLength": 128 },
+        "classroomCourseId": { "type": "string", "maxLength": 128 },
+        "priceMonthly": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "archived", "draft"] },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "title", "modality", "teacherId", "status"]
+    },
+    "Module": {
+      "title": "Module",
+      "description": "Academic module grouping classes inside a course",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "order": { "type": "number" }
+      },
+      "required": ["id", "courseId", "title"]
+    },
+    "AcademicClass": {
+      "title": "AcademicClass",
+      "description": "Individual music class with video, documents, exercises, evaluation and Google Workspace integrations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "moduleId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "teacher": { "type": "string", "maxLength": 150 },
+        "teacherId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 60 },
+        "duration": { "type": "string", "maxLength": 60 },
+        "modality": { "type": "string", "enum": ["grabada", "presencial", "virtual_en_vivo", "hibrida"] },
+        "video": { "type": "string", "maxLength": 500 },
+        "documents": { "type": "array" },
+        "exercises": { "type": "array" },
+        "evaluation": { "type": "object" },
+        "meetUrl": { "type": "string", "maxLength": 500 },
+        "meetCode": { "type": "string", "maxLength": 60 },
+        "driveUrl": { "type": "string", "maxLength": 500 },
+        "driveFolderId": { "type": "string", "maxLength": 128 },
+        "classroomUrl": { "type": "string", "maxLength": 500 },
+        "classroomId": { "type": "string", "maxLength": 128 },
+        "classroomTask": { "type": "string", "maxLength": 500 },
+        "order": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "draft", "archived"] }
+      },
+      "required": ["id", "courseId", "moduleId", "title", "modality"]
+    },
+    "Enrollment": {
+      "title": "Enrollment",
+      "description": "Student enrollment record granting authorization to classes, Meet, materials, Classroom, and videos",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 150 },
+        "studentEmail": { "type": "string", "maxLength": 150 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "courseTitle": { "type": "string", "maxLength": 200 },
+        "startDate": { "type": "string", "maxLength": 50 },
+        "expiresAt": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["active", "expired", "cancelled", "suspended", "pending"] },
+        "modality": { "type": "string", "enum": ["online_recorded", "presential", "live_virtual", "hybrid"] },
+        "accessType": { "type": "string", "enum": ["full_access", "materials_only", "live_sessions", "restricted"] },
+        "paymentMethod": { "type": "string", "enum": ["stripe", "tarjeta", "transferencia", "efectivo", "paypal"] },
+        "enrolledAt": { "type": "string", "maxLength": 50 },
+        "validUntil": { "type": "string", "maxLength": 50 },
+        "approvedBy": { "type": "string", "maxLength": 128 },
+        "paymentId": { "type": "string", "maxLength": 128 },
+        "lastValidatedAt": { "type": "string", "maxLength": 50 },
+        "notes": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["id", "studentId", "courseId", "startDate", "expiresAt", "status", "modality", "accessType", "paymentMethod"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Tuition, monthly fee, or promotion payment record verified by backend webhook architecture",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 150 },
+        "studentEmail": { "type": "string", "maxLength": 150 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "courseTitle": { "type": "string", "maxLength": 200 },
+        "concept": { "type": "string", "maxLength": 150 },
+        "amount": { "type": "number" },
+        "currency": { "type": "string", "maxLength": 10 },
+        "gateway": { "type": "string", "enum": ["stripe", "tarjeta", "transferencia", "efectivo", "paypal"] },
+        "status": { "type": "string", "enum": ["pending", "paid", "failed", "refunded"] },
+        "gatewayTransactionId": { "type": "string", "maxLength": 200 },
+        "gatewaySignature": { "type": "string", "maxLength": 200 },
+        "webhookReceivedAt": { "type": "string", "maxLength": 50 },
+        "validatedByBackend": { "type": "boolean" },
+        "validationDetails": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "paidAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "studentId", "courseId", "amount", "currency", "gateway", "status", "validatedByBackend"]
+    },
+    "Progress": {
+      "title": "Progress",
+      "description": "Academic progress tracking and evaluation recorded by faculty",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "completedLessons": { "type": "number" },
+        "totalLessons": { "type": "number" },
+        "percentage": { "type": "number" },
+        "grade": { "type": "string", "maxLength": 20 },
+        "feedback": { "type": "string", "maxLength": 1000 },
+        "lastUpdatedBy": { "type": "string", "maxLength": 128 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "studentId", "courseId", "percentage"]
+    },
+    "ClassProgress": {
+      "title": "ClassProgress",
+      "description": "Authoritative internal academic record for an individual class completed by a student, keeping the platform as primary source of truth",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 150 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "courseTitle": { "type": "string", "maxLength": 200 },
+        "moduleId": { "type": "string", "maxLength": 128 },
+        "moduleTitle": { "type": "string", "maxLength": 200 },
+        "classId": { "type": "string", "maxLength": 128 },
+        "classTitle": { "type": "string", "maxLength": 200 },
+        "completed": { "type": "boolean" },
+        "completedAt": { "type": "string", "maxLength": 50 },
+        "percentage": { "type": "number" },
+        "sourceOfTruth": { "type": "string", "enum": ["internal_platform", "classroom_sync", "manual"] },
+        "classroomActivityCompleted": { "type": "boolean" },
+        "classroomSubmissionDate": { "type": "string", "maxLength": 50 },
+        "meetSessionAttended": { "type": "boolean" },
+        "driveMaterialConsulted": { "type": "boolean" },
+        "notes": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["id", "studentId", "courseId", "moduleId", "classId", "completed", "completedAt", "percentage"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Class roll record for virtual live or in-person musical training",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "teacherId": { "type": "string", "maxLength": 128 },
+        "sessionDate": { "type": "string", "maxLength": 50 },
+        "modality": { "type": "string", "enum": ["live_virtual", "presential"] },
+        "status": { "type": "string", "enum": ["present", "absent", "late", "excused"] },
+        "notes": { "type": "string", "maxLength": 300 },
+        "recordedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "studentId", "courseId", "teacherId", "sessionDate", "status"]
+    },
+    "Material": {
+      "title": "Material",
+      "description": "Course learning assets: sheet music, audio tracks, PDFs, and Google Drive resources",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "teacherId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "type": { "type": "string", "enum": ["sheet_music", "pdf_guide", "audio_backing", "exercise", "video_lesson", "drive_resource"] },
+        "driveFileId": { "type": "string", "maxLength": 128 },
+        "driveUrl": { "type": "string", "maxLength": 500 },
+        "isPublic": { "type": "boolean" },
+        "uploadedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "courseId", "teacherId", "title", "type"]
+    },
+    "Certificate": {
+      "title": "Certificate",
+      "description": "Official diploma or certification with cryptographic hash and verification record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "certificateNumber": { "type": "string", "maxLength": 100 },
+        "studentName": { "type": "string", "maxLength": 150 },
+        "courseTitle": { "type": "string", "maxLength": 200 },
+        "grade": { "type": "string", "maxLength": 20 },
+        "issuedBy": { "type": "string", "maxLength": 128 },
+        "issueDate": { "type": "string", "maxLength": 50 },
+        "verificationHash": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "studentId", "courseId", "certificateNumber", "issuedBy", "issueDate"]
+    },
+    "GoogleIntegration": {
+      "title": "GoogleIntegration",
+      "description": "Academic Google Workspace resource mappings (Meet, Drive, Classroom)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "serviceType": { "type": "string", "enum": ["meet", "drive", "classroom"] },
+        "courseId": { "type": "string", "maxLength": 128 },
+        "resourceId": { "type": "string", "maxLength": 200 },
+        "resourceUri": { "type": "string", "maxLength": 500 },
+        "assignedTeacherId": { "type": "string", "maxLength": 128 },
+        "active": { "type": "boolean" },
+        "lastSyncedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "serviceType", "courseId", "resourceUri"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable security and access logs preserving forensic audit trail",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "action": { "type": "string", "maxLength": 100 },
+        "performedBy": { "type": "string", "maxLength": 128 },
+        "targetUser": { "type": "string", "maxLength": 128 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "timestamp": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["id", "action", "performedBy", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents with role and personal credentials"
+    },
+    "/admins/{userId}": {
+      "schema": "AdminRecord",
+      "description": "Authoritative registry of superadministrators and administrators"
+    },
+    "/teachers/{userId}": {
+      "schema": "TeacherRecord",
+      "description": "Authoritative registry of approved academy music teachers"
+    },
+    "/courses/{courseId}": {
+      "schema": "Course",
+      "description": "Academic course offerings, schedules, and Google references"
+    },
+    "/modules/{moduleId}": {
+      "schema": "Module",
+      "description": "Academic modules grouping classes inside a course"
+    },
+    "/classes/{classId}": {
+      "schema": "AcademicClass",
+      "description": "Music class sessions with Google Meet, Drive, Classroom, exercises and evaluation"
+    },
+    "/enrollments/{enrollmentId}": {
+      "schema": "Enrollment",
+      "description": "Student course authorizations and enrollment contracts"
+    },
+    "/payments/{paymentId}": {
+      "schema": "Payment",
+      "description": "Tuition, monthly fee payments, receipts, and verification records"
+    },
+    "/progress/{progressId}": {
+      "schema": "Progress",
+      "description": "Academic evaluations and module progress recorded by faculty"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": "Attendance",
+      "description": "In-person and live virtual attendance roll call"
+    },
+    "/materials/{materialId}": {
+      "schema": "Material",
+      "description": "Musical sheet music, PDFs, exercises, and Google Drive resources"
+    },
+    "/certificates/{certificateId}": {
+      "schema": "Certificate",
+      "description": "Official graduation diplomas and course certificates"
+    },
+    "/google_integrations/{integrationId}": {
+      "schema": "GoogleIntegration",
+      "description": "Academic Google Workspace resource linkings"
+    },
+    "/audit_logs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Immutable security and access logs"
+    }
+  }
+}

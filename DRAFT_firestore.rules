@@ -1,0 +1,458 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Pillar 1 & Phase 4: Default-deny all documents by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Functions & Hardened Security Primitives ---
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Email Spoofing Defense: Strict email_verified requirement
+    function isBootstrapDirector() {
+      return isSignedIn() &&
+             request.auth.token.email == 'mariobarillas24@gmail.com' &&
+             request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        isBootstrapDirector() ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && (
+        isBootstrapDirector() ||
+        (exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'superadmin')
+      );
+    }
+
+    function isApprovedTeacher() {
+      return isSignedIn() && (
+        isAdmin() ||
+        exists(/databases/$(database)/documents/teachers/$(request.auth.uid))
+      );
+    }
+
+    function isCourseTeacher(courseId) {
+      return isSignedIn() && (
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/courses/$(courseId)) &&
+         get(/databases/$(database)/documents/courses/$(courseId)).data.teacherId == request.auth.uid)
+      );
+    }
+
+    // --- Entity Validation Blueprints (Anti-Update-Gap) ---
+
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.email is string && data.email.size() <= 200 &&
+             data.role in ['superadmin', 'admin', 'teacher', 'student'] &&
+             data.status in ['active', 'pending', 'suspended'] &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
+             (!('instrument' in data) || (data.instrument is string && data.instrument.size() <= 60)) &&
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
+             (!('googleConnected' in data) || data.googleConnected is bool);
+    }
+
+    function isValidCourse(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.title is string && data.title.size() >= 3 && data.title.size() <= 200 &&
+             data.modality in ['online_recorded', 'presential', 'live_virtual', 'hybrid'] &&
+             data.teacherId is string && data.teacherId.size() <= 128 && data.teacherId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.status in ['active', 'archived', 'draft'] &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+             (!('schedule' in data) || (data.schedule is string && data.schedule.size() <= 150)) &&
+             (!('meetUrl' in data) || (data.meetUrl is string && data.meetUrl.size() <= 300)) &&
+             (!('meetCode' in data) || (data.meetCode is string && data.meetCode.size() <= 50)) &&
+             (!('driveFolderId' in data) || (data.driveFolderId is string && data.driveFolderId.size() <= 128)) &&
+             (!('classroomCourseId' in data) || (data.classroomCourseId is string && data.classroomCourseId.size() <= 128)) &&
+             (!('priceMonthly' in data) || (data.priceMonthly is number && data.priceMonthly >= 0));
+    }
+
+    function isValidEnrollment(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.studentId is string && data.studentId.size() <= 128 && data.studentId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.courseId is string && data.courseId.size() <= 128 && data.courseId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.status in ['active', 'pending', 'completed', 'cancelled'] &&
+             (!('approvedBy' in data) || (data.approvedBy is string && data.approvedBy.size() <= 128)) &&
+             (!('enrolledAt' in data) || (data.enrolledAt is string && data.enrolledAt.size() <= 50)) &&
+             (!('validUntil' in data) || (data.validUntil is string && data.validUntil.size() <= 50));
+    }
+
+    function isValidPayment(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.studentId is string && data.studentId.size() <= 128 && data.studentId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.courseId is string && data.courseId.size() <= 128 && data.courseId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.amount is number && data.amount >= 0 && data.amount <= 100000 &&
+             data.status in ['pending', 'paid', 'rejected', 'refunded'] &&
+             (!('concept' in data) || (data.concept is string && data.concept.size() <= 150)) &&
+             (!('currency' in data) || (data.currency is string && data.currency.size() <= 10)) &&
+             (!('method' in data) || (data.method is string && data.method.size() <= 50)) &&
+             (!('receiptUrl' in data) || (data.receiptUrl is string && data.receiptUrl.size() <= 500)) &&
+             (!('verifiedBy' in data) || (data.verifiedBy is string && data.verifiedBy.size() <= 128)) &&
+             (!('paidAt' in data) || (data.paidAt is string && data.paidAt.size() <= 50)) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50));
+    }
+
+    function isValidProgress(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.studentId is string && data.studentId.size() <= 128 && data.studentId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.courseId is string && data.courseId.size() <= 128 && data.courseId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.percentage is number && data.percentage >= 0 && data.percentage <= 100 &&
+             (!('grade' in data) || (data.grade is string && data.grade.size() <= 20)) &&
+             (!('feedback' in data) || (data.feedback is string && data.feedback.size() <= 1000)) &&
+             (!('completedLessons' in data) || data.completedLessons is number) &&
+             (!('totalLessons' in data) || data.totalLessons is number) &&
+             (!('lastUpdatedBy' in data) || (data.lastUpdatedBy is string && data.lastUpdatedBy.size() <= 128)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    function isValidAttendance(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.studentId is string && data.studentId.size() <= 128 && data.studentId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.courseId is string && data.courseId.size() <= 128 && data.courseId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.teacherId is string && data.teacherId.size() <= 128 && data.teacherId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.status in ['present', 'absent', 'late', 'excused'] &&
+             (!('sessionDate' in data) || (data.sessionDate is string && data.sessionDate.size() <= 50)) &&
+             (!('modality' in data) || (data.modality is string && data.modality.size() <= 30)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 300)) &&
+             (!('recordedAt' in data) || (data.recordedAt is string && data.recordedAt.size() <= 50));
+    }
+
+    function isValidMaterial(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.courseId is string && data.courseId.size() <= 128 && data.courseId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.teacherId is string && data.teacherId.size() <= 128 && data.teacherId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.title is string && data.title.size() >= 2 && data.title.size() <= 200 &&
+             data.type in ['sheet_music', 'pdf_guide', 'audio_backing', 'exercise', 'video_lesson', 'drive_resource'] &&
+             (!('driveFileId' in data) || (data.driveFileId is string && data.driveFileId.size() <= 128)) &&
+             (!('driveUrl' in data) || (data.driveUrl is string && data.driveUrl.size() <= 500)) &&
+             (!('isPublic' in data) || data.isPublic is bool) &&
+             (!('uploadedAt' in data) || (data.uploadedAt is string && data.uploadedAt.size() <= 50));
+    }
+
+    function isValidCertificate(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.studentId is string && data.studentId.size() <= 128 && data.studentId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.courseId is string && data.courseId.size() <= 128 && data.courseId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.certificateNumber is string && data.certificateNumber.size() <= 100 &&
+             (!('studentName' in data) || (data.studentName is string && data.studentName.size() <= 150)) &&
+             (!('courseTitle' in data) || (data.courseTitle is string && data.courseTitle.size() <= 200)) &&
+             (!('grade' in data) || (data.grade is string && data.grade.size() <= 20)) &&
+             (!('issuedBy' in data) || (data.issuedBy is string && data.issuedBy.size() <= 128)) &&
+             (!('issueDate' in data) || (data.issueDate is string && data.issueDate.size() <= 50)) &&
+             (!('verificationHash' in data) || (data.verificationHash is string && data.verificationHash.size() <= 128));
+    }
+
+    function isValidGoogleIntegration(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.serviceType in ['meet', 'drive', 'classroom'] &&
+             data.courseId is string && data.courseId.size() <= 128 && data.courseId.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.resourceUri is string && data.resourceUri.size() <= 500 &&
+             (!('resourceId' in data) || (data.resourceId is string && data.resourceId.size() <= 200)) &&
+             (!('assignedTeacherId' in data) || (data.assignedTeacherId is string && data.assignedTeacherId.size() <= 128)) &&
+             (!('active' in data) || data.active is bool) &&
+             (!('lastSyncedAt' in data) || (data.lastSyncedAt is string && data.lastSyncedAt.size() <= 50));
+    }
+
+    function isValidAuditLog(data) {
+      return data.id is string && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+             data.action is string && data.action.size() <= 100 &&
+             data.performedBy is string && data.performedBy.size() <= 128 &&
+             (!('targetUser' in data) || (data.targetUser is string && data.targetUser.size() <= 128)) &&
+             (!('details' in data) || (data.details is string && data.details.size() <= 1000)) &&
+             (!('timestamp' in data) || (data.timestamp is string && data.timestamp.size() <= 50));
+    }
+
+    // ==========================================
+    // 1. Users Collection (/users/{userId})
+    // ==========================================
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin() || isApprovedTeacher());
+      allow list: if isAdmin() || isApprovedTeacher();
+
+      allow create: if isSignedIn() && isValidId(userId) && userId == request.auth.uid &&
+                       isValidUser(incoming()) && incoming().uid == request.auth.uid &&
+                       (
+                         (isBootstrapDirector() && incoming().role in ['superadmin', 'admin', 'teacher', 'student']) ||
+                         (isAdmin() && incoming().role in ['admin', 'teacher', 'student']) ||
+                         (!isAdmin() && incoming().role == 'student' && incoming().status == 'active')
+                       );
+
+      allow update: if isSignedIn() && isValidId(userId) && isValidUser(incoming()) && (
+        isSuperAdmin() ||
+        (isAdmin() && incoming().role != 'superadmin') ||
+        (isOwner(userId) &&
+         incoming().role == existing().role &&
+         incoming().status == existing().status &&
+         incoming().diff(existing()).affectedKeys().hasOnly([
+           'displayName', 'photoURL', 'phone', 'instrument',
+           'googleConnected', 'updatedAt', 'bio'
+         ]))
+      );
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // ==========================================
+    // 2. Authoritative Admin Registry (/admins/{adminId})
+    // ==========================================
+    match /admins/{adminId} {
+      allow get: if isAdmin() && isValidId(adminId);
+      allow list: if isAdmin();
+      allow create, update, delete: if (isSuperAdmin() || isBootstrapDirector()) && isValidId(adminId);
+    }
+
+    // ==========================================
+    // 3. Authoritative Faculty Registry (/teachers/{teacherId})
+    // ==========================================
+    match /teachers/{teacherId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin() && isValidId(teacherId);
+    }
+
+    // ==========================================
+    // 4. Academic Courses (/courses/{courseId})
+    // ==========================================
+    match /courses/{courseId} {
+      allow get, list: if isSignedIn();
+
+      allow create: if isSignedIn() && isValidId(courseId) && isValidCourse(incoming()) && (
+        isAdmin() ||
+        (isApprovedTeacher() && incoming().teacherId == request.auth.uid)
+      );
+
+      allow update: if isSignedIn() && isValidId(courseId) && isValidCourse(incoming()) &&
+                       incoming().id == existing().id && (
+        isSuperAdmin() ||
+        isAdmin() ||
+        (isApprovedTeacher() && existing().teacherId == request.auth.uid && incoming().teacherId == request.auth.uid)
+      );
+
+      allow delete: if (isSuperAdmin() || isAdmin()) && isValidId(courseId);
+    }
+
+    // ==========================================
+    // 5. Course Enrollments (/enrollments/{enrollmentId})
+    // ==========================================
+    match /enrollments/{enrollmentId} {
+      allow get: if isSignedIn() && isValidId(enrollmentId) && (
+        resource.data.studentId == request.auth.uid ||
+        isApprovedTeacher() ||
+        isAdmin()
+      );
+
+      allow list: if isAdmin() || isApprovedTeacher() || (
+        isSignedIn() && resource.data.studentId == request.auth.uid
+      );
+
+      allow create: if isSignedIn() && isValidId(enrollmentId) && isValidEnrollment(incoming()) && (
+        isAdmin() ||
+        (incoming().studentId == request.auth.uid && incoming().status == 'pending')
+      );
+
+      // Only administration can approve / change enrollment state. Relational keys studentId & courseId are immutable.
+      allow update: if isAdmin() && isValidId(enrollmentId) && isValidEnrollment(incoming()) &&
+                       incoming().studentId == existing().studentId &&
+                       incoming().courseId == existing().courseId;
+
+      allow delete: if (isSuperAdmin() || isAdmin()) && isValidId(enrollmentId);
+    }
+
+    // ==========================================
+    // 6. Payments & Monthly Fees (/payments/{paymentId})
+    // ==========================================
+    match /payments/{paymentId} {
+      allow get: if isSignedIn() && isValidId(paymentId) && (
+        resource.data.studentId == request.auth.uid ||
+        isAdmin()
+      );
+
+      allow list: if isAdmin() || (
+        isSignedIn() && resource.data.studentId == request.auth.uid
+      );
+
+      allow create: if isSignedIn() && isValidId(paymentId) && isValidPayment(incoming()) && (
+        isAdmin() ||
+        (incoming().studentId == request.auth.uid && incoming().status == 'pending')
+      );
+
+      // Only administrators can verify and reconcile payments. Relational keys are locked.
+      allow update: if isAdmin() && isValidId(paymentId) && isValidPayment(incoming()) &&
+                       incoming().studentId == existing().studentId &&
+                       incoming().courseId == existing().courseId;
+
+      allow delete: if isSuperAdmin() && isValidId(paymentId);
+    }
+
+    // ==========================================
+    // 7. Academic Progress & Grading (/progress/{progressId})
+    // ==========================================
+    match /progress/{progressId} {
+      allow get: if isSignedIn() && isValidId(progressId) && (
+        resource.data.studentId == request.auth.uid ||
+        isApprovedTeacher() ||
+        isAdmin()
+      );
+
+      allow list: if isAdmin() || isApprovedTeacher() || (
+        isSignedIn() && resource.data.studentId == request.auth.uid
+      );
+
+      allow create: if isSignedIn() && isValidId(progressId) && isValidProgress(incoming()) && (
+        isAdmin() ||
+        (isApprovedTeacher() && isCourseTeacher(incoming().courseId))
+      );
+
+      allow update: if isSignedIn() && isValidId(progressId) && isValidProgress(incoming()) &&
+                       incoming().studentId == existing().studentId &&
+                       incoming().courseId == existing().courseId && (
+        isAdmin() ||
+        (isApprovedTeacher() && isCourseTeacher(existing().courseId))
+      );
+
+      allow delete: if isAdmin() && isValidId(progressId);
+    }
+
+    // ==========================================
+    // 8. Class Attendance Rolls (/attendance/{attendanceId})
+    // ==========================================
+    match /attendance/{attendanceId} {
+      allow get: if isSignedIn() && isValidId(attendanceId) && (
+        resource.data.studentId == request.auth.uid ||
+        isApprovedTeacher() ||
+        isAdmin()
+      );
+
+      allow list: if isAdmin() || isApprovedTeacher() || (
+        isSignedIn() && resource.data.studentId == request.auth.uid
+      );
+
+      allow create: if isSignedIn() && isValidId(attendanceId) && isValidAttendance(incoming()) && (
+        isAdmin() ||
+        (isApprovedTeacher() && incoming().teacherId == request.auth.uid && isCourseTeacher(incoming().courseId))
+      );
+
+      allow update: if isSignedIn() && isValidId(attendanceId) && isValidAttendance(incoming()) &&
+                       incoming().studentId == existing().studentId &&
+                       incoming().courseId == existing().courseId && (
+        isAdmin() ||
+        (isApprovedTeacher() && existing().teacherId == request.auth.uid && incoming().teacherId == request.auth.uid && isCourseTeacher(existing().courseId))
+      );
+
+      allow delete: if isAdmin() && isValidId(attendanceId);
+    }
+
+    // ==========================================
+    // 9. Academic Materials & Sheet Music (/materials/{materialId})
+    // ==========================================
+    match /materials/{materialId} {
+      allow get: if isSignedIn() && isValidId(materialId) && (
+        resource.data.isPublic == true ||
+        isApprovedTeacher() ||
+        isAdmin() ||
+        isOwner(resource.data.teacherId) ||
+        exists(/databases/$(database)/documents/enrollments/$(request.auth.uid + '_' + resource.data.courseId))
+      );
+
+      allow list: if isAdmin() || isApprovedTeacher() || (
+        isSignedIn() && resource.data.isPublic == true
+      );
+
+      allow create: if isSignedIn() && isValidId(materialId) && isValidMaterial(incoming()) && (
+        isAdmin() ||
+        (isApprovedTeacher() && incoming().teacherId == request.auth.uid)
+      );
+
+      allow update: if isSignedIn() && isValidId(materialId) && isValidMaterial(incoming()) && (
+        isAdmin() ||
+        (isApprovedTeacher() && existing().teacherId == request.auth.uid && incoming().teacherId == request.auth.uid)
+      );
+
+      allow delete: if (isAdmin() || (isApprovedTeacher() && existing().teacherId == request.auth.uid)) && isValidId(materialId);
+    }
+
+    // ==========================================
+    // 10. Official Diplomas & Certificates (/certificates/{certificateId})
+    // ==========================================
+    match /certificates/{certificateId} {
+      allow get: if isSignedIn() && isValidId(certificateId);
+
+      allow list: if isAdmin() || (
+        isSignedIn() && resource.data.studentId == request.auth.uid
+      );
+
+      allow create, update: if isAdmin() && isValidId(certificateId) && isValidCertificate(incoming());
+
+      allow delete: if isSuperAdmin() && isValidId(certificateId);
+    }
+
+    // ==========================================
+    // 11. Google Workspace Academic References (/google_integrations/{integrationId})
+    // ==========================================
+    match /google_integrations/{integrationId} {
+      allow get: if isSignedIn() && isValidId(integrationId) && (
+        isAdmin() ||
+        isApprovedTeacher() ||
+        exists(/databases/$(database)/documents/enrollments/$(request.auth.uid + '_' + resource.data.courseId))
+      );
+
+      allow list: if isAdmin() || isApprovedTeacher();
+
+      allow create: if isSignedIn() && isValidId(integrationId) && isValidGoogleIntegration(incoming()) && (
+        isAdmin() ||
+        (isApprovedTeacher() && isCourseTeacher(incoming().courseId))
+      );
+
+      allow update: if isSignedIn() && isValidId(integrationId) && isValidGoogleIntegration(incoming()) && (
+        isAdmin() ||
+        (isApprovedTeacher() && isCourseTeacher(existing().courseId) && incoming().courseId == existing().courseId)
+      );
+
+      allow delete: if isSignedIn() && isValidId(integrationId) && (
+        isAdmin() ||
+        (isApprovedTeacher() && isCourseTeacher(existing().courseId))
+      );
+    }
+
+    // ==========================================
+    // 12. Security Audit Logs (/audit_logs/{logId})
+    // ==========================================
+    match /audit_logs/{logId} {
+      allow get, list: if isAdmin() && isValidId(logId);
+
+      allow create: if isSignedIn() && isValidId(logId) && isValidAuditLog(incoming()) &&
+                       incoming().performedBy == request.auth.uid;
+
+      // Forensic immutability: Audit logs can NEVER be updated or deleted
+      allow update, delete: if false;
+    }
+  }
+}

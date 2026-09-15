@@ -1,0 +1,6 @@
+{
+  "name": "Academia Musical Judá",
+  "description": "Plataforma integral de gestión y aprendizaje musical con cursos online, presenciales y virtuales en vivo, sincronizada con Google Workspace.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
