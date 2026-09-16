@@ -315,15 +315,15 @@ export const SecurityAuditView: React.FC = () => {
         <div className="relative z-10 max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 text-xs font-semibold">
             <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span>FASE 17 — AUDITORÍA FINAL, ESCALABILIDAD Y PRODUCCIÓN</span>
+            <span>SEGURIDAD DEL SISTEMA, MONITOREO Y CONFORMIDAD</span>
           </div>
 
           <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-white">
-            Auditoría Integral & Preparación para Producción
+            Seguridad Integral & Preparación para Producción
           </h1>
 
           <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">
-            Evaluación técnica exhaustiva del sistema: pruebas de penetración contra los 12 vectores críticos de acceso no autorizado, auditoría de infraestructura y base de datos Firestore, pipeline de despliegue y checklist maestro de salida a producción.
+            Evaluación técnica exhaustiva del sistema: pruebas de penetración contra los 12 vectores críticos de acceso no autorizado, supervisión de infraestructura y base de datos Firestore, pipeline de despliegue y checklist maestro de salida a producción.
           </p>
 
           <div className="pt-3 flex flex-wrap items-center gap-3 text-xs">
@@ -337,7 +337,7 @@ export const SecurityAuditView: React.FC = () => {
             </span>
             <span className="bg-stone-800/80 border border-stone-700 px-3 py-1.5 rounded-xl flex items-center gap-2">
               <Terminal className="w-3.5 h-3.5 text-sky-400" />
-              <span>Batería: <strong>12 Vectores FASE 17</strong></span>
+              <span>Batería: <strong>12 Vectores de Seguridad</strong></span>
             </span>
           </div>
         </div>
@@ -391,7 +391,7 @@ export const SecurityAuditView: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-serif text-sm font-bold text-stone-900">
-                    Resultado de la Batería FASE 17
+                    Resultado de las Pruebas de Seguridad
                   </h4>
                   <p className="text-xs text-stone-500">
                     {blockedCount} de {totalRun} vectores probados fueron repelidos con éxito por las reglas de seguridad.
@@ -670,7 +670,7 @@ export const SecurityAuditView: React.FC = () => {
                 <div className="text-xs text-stone-300 space-y-2">
                   <p>1. Exportación limpia del repositorio desde el menú de configuración de AI Studio.</p>
                   <p>2. Creación de ramas protegidas: <code className="bg-stone-800 px-1 py-0.5 rounded font-mono text-amber-300">main</code> (producción) y <code className="bg-stone-800 px-1 py-0.5 rounded font-mono text-amber-300">staging</code>.</p>
-                  <p>3. Tagging semántico de versiones: <code className="bg-stone-800 px-1 py-0.5 rounded font-mono text-emerald-300">v1.0.0-fase17</code> para la entrega certificada.</p>
+                  <p>3. Tagging semántico de versiones: <code className="bg-stone-800 px-1 py-0.5 rounded font-mono text-emerald-300">v1.0.0-release</code> para la entrega certificada.</p>
                 </div>
               </div>
 
@@ -809,7 +809,7 @@ export const SecurityAuditView: React.FC = () => {
           <div className="space-y-4 text-xs text-stone-700 leading-relaxed">
             <h4 className="font-serif text-sm font-bold text-stone-900">1. Resumen Ejecutivo</h4>
             <p>
-              Se ha completado la auditoría integral correspondiente a la <strong>FASE 17</strong> sobre la plataforma de Academia Musical Judá. Se evaluaron las 12 colecciones de Cloud Firestore, la arquitectura de autenticación con Firebase Auth, el satélite de integración con Google Workspace (Meet, Drive, Classroom) y la landing comercial pública de la <strong>FASE 16</strong>.
+              Se ha completado la auditoría integral de seguridad sobre la plataforma de Academia Musical Judá. Se evaluaron las 12 colecciones de Cloud Firestore, la arquitectura de autenticación con Firebase Auth, el satélite de integración con Google Workspace (Meet, Drive, Classroom) y el portal web institucional.
             </p>
 
             <h4 className="font-serif text-sm font-bold text-stone-900 pt-2">2. Resultados de la Batería de Pruebas de Intrusión (Red Team)</h4>
@@ -918,7 +918,7 @@ export const SecurityAuditView: React.FC = () => {
           </div>
 
           <pre className="bg-stone-900 p-4 rounded-xl text-[11px] font-mono text-stone-300 overflow-x-auto border border-stone-800 leading-relaxed">
-{`// Reglas de Producción: Academia Musical Judá (FASE 17)
+{`// Reglas de Producción: Academia Musical Judá (Seguridad & Roles)
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {

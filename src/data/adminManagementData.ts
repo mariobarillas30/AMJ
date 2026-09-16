@@ -44,7 +44,7 @@ export const INITIAL_ADMIN_TEACHERS: AdminTeacher[] = [
     status: 'active',
     assignedCoursesCount: 2,
     weeklyHours: 18,
-    phone: '+502 5551-0101',
+    phone: '+503 7751-0101',
     hireDate: '2023-01-15'
   },
   {
@@ -56,7 +56,7 @@ export const INITIAL_ADMIN_TEACHERS: AdminTeacher[] = [
     status: 'active',
     assignedCoursesCount: 1,
     weeklyHours: 14,
-    phone: '+502 5551-0202',
+    phone: '+503 7751-0202',
     hireDate: '2023-03-20'
   },
   {
@@ -68,7 +68,7 @@ export const INITIAL_ADMIN_TEACHERS: AdminTeacher[] = [
     status: 'active',
     assignedCoursesCount: 1,
     weeklyHours: 12,
-    phone: '+502 5551-0303',
+    phone: '+503 7751-0303',
     hireDate: '2023-06-10'
   },
   {
@@ -80,7 +80,7 @@ export const INITIAL_ADMIN_TEACHERS: AdminTeacher[] = [
     status: 'active',
     assignedCoursesCount: 1,
     weeklyHours: 10,
-    phone: '+502 5551-0404',
+    phone: '+503 7751-0404',
     hireDate: '2024-01-08'
   },
   {
@@ -92,7 +92,7 @@ export const INITIAL_ADMIN_TEACHERS: AdminTeacher[] = [
     status: 'active',
     assignedCoursesCount: 1,
     weeklyHours: 8,
-    phone: '+502 5551-0505',
+    phone: '+503 7751-0505',
     hireDate: '2024-05-12'
   }
 ];
@@ -107,7 +107,7 @@ export const INITIAL_ADMIN_STUDENTS: AdminStudent[] = [
     enrolledCoursesCount: 1,
     attendanceRate: 98,
     joinedAt: '2026-01-10',
-    phone: '+502 4444-1111',
+    phone: '+503 7757-3023',
     notes: 'Estudiante avanzado en repertorio clásico Bach/Chopin.'
   },
   {
@@ -119,7 +119,7 @@ export const INITIAL_ADMIN_STUDENTS: AdminStudent[] = [
     enrolledCoursesCount: 1,
     attendanceRate: 95,
     joinedAt: '2026-02-14',
-    phone: '+502 4444-2222',
+    phone: '+503 7444-2222',
     notes: 'En preparación para audición lírica de fin de ciclo.'
   },
   {
@@ -131,7 +131,7 @@ export const INITIAL_ADMIN_STUDENTS: AdminStudent[] = [
     enrolledCoursesCount: 1,
     attendanceRate: 91,
     joinedAt: '2026-03-01',
-    phone: '+502 4444-3333',
+    phone: '+503 7444-3333',
     notes: 'Interés en arreglos fingerstyle y música barroca.'
   },
   {
@@ -143,7 +143,7 @@ export const INITIAL_ADMIN_STUDENTS: AdminStudent[] = [
     enrolledCoursesCount: 0,
     attendanceRate: 0,
     joinedAt: '2026-08-25',
-    phone: '+502 4444-4444',
+    phone: '+503 7444-4444',
     notes: 'Solicitud de matrícula pendiente de confirmación de pago.'
   },
   {
@@ -155,7 +155,7 @@ export const INITIAL_ADMIN_STUDENTS: AdminStudent[] = [
     enrolledCoursesCount: 1,
     attendanceRate: 88,
     joinedAt: '2026-04-12',
-    phone: '+502 4444-5555',
+    phone: '+503 7444-5555',
     notes: 'Buen desempeño en método Suzuki volumen 2.'
   },
   {
@@ -167,7 +167,7 @@ export const INITIAL_ADMIN_STUDENTS: AdminStudent[] = [
     enrolledCoursesCount: 0,
     attendanceRate: 65,
     joinedAt: '2026-02-05',
-    phone: '+502 4444-6666',
+    phone: '+503 7444-6666',
     notes: 'Matrícula pausada temporalmente por viaje académico.'
   }
 ];
@@ -318,14 +318,14 @@ export const INITIAL_ADMIN_PAYMENTS: PaymentTransaction[] = [
     courseId: 'course-piano',
     courseTitle: 'Piano Clásico, Solfeo & Armonía Funcional',
     amount: 350,
-    currency: 'GTQ',
+    currency: 'USD',
     gateway: 'stripe',
     status: 'paid',
     gatewayTransactionId: 'ch_3NxStripe9821JudahPiano',
     gatewaySignature: 'sig_sec_sha256_9b83f0d238a9e',
     webhookReceivedAt: '2026-01-15T10:02:14Z',
     validatedByBackend: true,
-    validationDetails: 'Webhook Stripe validado criptográficamente por backend. Matrícula enr-001 activada.',
+    validationDetails: 'Webhook Stripe validado por backend. Matrícula enr-001 activada.',
     createdAt: '2026-01-15T10:00:00Z',
     paidAt: '2026-01-15T10:02:15Z'
   },
@@ -337,7 +337,7 @@ export const INITIAL_ADMIN_PAYMENTS: PaymentTransaction[] = [
     courseId: 'course-vocal',
     courseTitle: 'Técnica Vocal & Canto Lírico Contemporáneo',
     amount: 320,
-    currency: 'GTQ',
+    currency: 'USD',
     gateway: 'tarjeta',
     status: 'paid',
     gatewayTransactionId: 'ch_cybersource_771928_vocal',
@@ -356,14 +356,14 @@ export const INITIAL_ADMIN_PAYMENTS: PaymentTransaction[] = [
     courseId: 'course-guitar',
     courseTitle: 'Guitarra Acústica & Fingerstyle Avanzado',
     amount: 300,
-    currency: 'GTQ',
+    currency: 'USD',
     gateway: 'transferencia',
     status: 'paid',
-    gatewayTransactionId: 'bank_banrural_trans_8829102',
+    gatewayTransactionId: 'bank_agricola_trans_8829102',
     gatewaySignature: 'sig_sec_manual_audit_secret',
     webhookReceivedAt: '2026-03-02T16:05:00Z',
     validatedByBackend: true,
-    validationDetails: 'Boleta bancaria conciliada por backend contable.',
+    validationDetails: 'Boleta de transferencia Banco Agrícola (El Salvador) conciliada por tesorería central.',
     createdAt: '2026-03-02T16:00:00Z',
     paidAt: '2026-03-02T16:05:00Z'
   },
@@ -375,7 +375,7 @@ export const INITIAL_ADMIN_PAYMENTS: PaymentTransaction[] = [
     courseId: 'course-vocal',
     courseTitle: 'Técnica Vocal & Canto Lírico Contemporáneo',
     amount: 320,
-    currency: 'GTQ',
+    currency: 'USD',
     gateway: 'stripe',
     status: 'paid',
     gatewayTransactionId: 'ch_stripe_old_expired_session',

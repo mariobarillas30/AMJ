@@ -10,6 +10,7 @@ import {
   resolveEffectiveStudentId,
   getFirebaseAdmin,
   getAdminFirestore,
+  getAdminAuth,
   resolveSovereignRole,
   type AuthenticatedBackendUser,
   type BackendRole
@@ -22,7 +23,8 @@ const PORT = 3000;
 const GATEWAY_WEBHOOK_SECRET = process.env.GATEWAY_WEBHOOK_SECRET || 'juda_sec_wh_acad_live_992147';
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // In-Memory store for Server Authority (Backed by Firestore in cloud setup)
 interface ServerPaymentRecord {
@@ -200,6 +202,422 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
     user: req.user,
     timestamp: new Date().toISOString()
   });
+});
+
+// 1.2. Sincronización Soberana de Perfil y Enlace Autoritativo UID -> Rol
+app.post('/api/auth/sync', requireAuth, async (req, res) => {
+  const user = req.user!;
+  const firestore = getAdminFirestore();
+
+  try {
+    const userEmailNormalized = (user.email || '').toLowerCase().trim();
+    const emailKey = userEmailNormalized.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const isDirector = userEmailNormalized === 'mariobarillas24@gmail.com';
+
+    // 1. Verificar si existen registros autoritativos para este UID
+    const adminDocRef = firestore.collection('admins').doc(user.uid);
+    const teacherDocRef = firestore.collection('teachers').doc(user.uid);
+    const userDocRef = firestore.collection('users').doc(user.uid);
+
+    const [adminSnap, teacherSnap, userSnap] = await Promise.all([
+      adminDocRef.get().catch(() => null),
+      teacherDocRef.get().catch(() => null),
+      userDocRef.get().catch(() => null),
+    ]);
+
+    // 2. Si el usuario es el Director General, asegurar registro en /admins
+    if (isDirector) {
+      await adminDocRef.set({
+        uid: user.uid,
+        email: user.email,
+        role: 'superadmin',
+        grantedBy: 'system_bootstrap',
+        createdAt: new Date().toISOString(),
+      }, { merge: true }).catch(err => console.warn('[API /api/auth/sync] Admin doc write note:', err?.message || err));
+    }
+
+    // 3. Buscar si un Administrador pre-creó un perfil provisional para este correo
+    let preCreatedProfile: any = null;
+    try {
+      const preUserDocRef = firestore.collection('users').doc('pre_' + emailKey);
+      const preUserSnap = await preUserDocRef.get().catch(() => null);
+
+      if (preUserSnap && preUserSnap.exists) {
+        preCreatedProfile = preUserSnap.data();
+        await preUserDocRef.delete().catch(() => {});
+        await firestore.collection('admins').doc(emailKey).delete().catch(() => {});
+        await firestore.collection('teachers').doc(emailKey).delete().catch(() => {});
+      } else {
+        const querySnap = await firestore.collection('users').where('email', '==', userEmailNormalized).get().catch(() => null);
+        if (querySnap) {
+          for (const doc of querySnap.docs) {
+            if (doc.id !== user.uid) {
+              preCreatedProfile = doc.data();
+              await doc.ref.delete().catch(() => {});
+              break;
+            }
+          }
+        }
+      }
+    } catch (lookupErr: any) {
+      console.warn('[API /api/auth/sync] Pre-profile lookup note:', lookupErr?.message || lookupErr);
+    }
+
+    // 4. Determinar rol autoritativo con jerarquía estricta
+    let authoritativeRole: BackendRole = 'student';
+    if (isDirector) {
+      authoritativeRole = 'superadmin';
+    } else if (adminSnap && adminSnap.exists) {
+      authoritativeRole = adminSnap.data()?.role === 'superadmin' ? 'superadmin' : 'admin';
+    } else if (teacherSnap && teacherSnap.exists) {
+      authoritativeRole = 'teacher';
+    } else if (preCreatedProfile?.role) {
+      authoritativeRole = preCreatedProfile.role;
+    } else if (userSnap && userSnap.exists) {
+      const existingRole = userSnap.data()?.role;
+      if (['superadmin', 'admin', 'teacher', 'student'].includes(existingRole)) {
+        authoritativeRole = existingRole;
+      }
+    } else if (user.role) {
+      authoritativeRole = user.role;
+    }
+
+    // 5. Garantizar concordancia en colecciones especializadas
+    if (authoritativeRole === 'teacher') {
+      await teacherDocRef.set({
+        uid: user.uid,
+        email: user.email,
+        specialties: [preCreatedProfile?.instrument || 'Música'],
+        createdAt: new Date().toISOString(),
+      }, { merge: true }).catch(err => console.warn('[API /api/auth/sync] Teacher doc write note:', err?.message || err));
+    } else if (authoritativeRole === 'admin' || authoritativeRole === 'superadmin') {
+      await adminDocRef.set({
+        uid: user.uid,
+        email: user.email,
+        role: authoritativeRole,
+        grantedBy: 'system_sync',
+        createdAt: new Date().toISOString(),
+      }, { merge: true }).catch(err => console.warn('[API /api/auth/sync] Admin doc write note:', err?.message || err));
+    }
+
+    // 6. Crear o actualizar perfil en /users/{uid}
+    let profileData: any;
+    try {
+      if (!userSnap || !userSnap.exists) {
+        profileData = {
+          uid: user.uid,
+          email: user.email || userEmailNormalized,
+          displayName: req.body?.displayName || user.name || preCreatedProfile?.displayName || user.email?.split('@')[0] || 'Usuario Judá',
+          photoURL: req.body?.photoURL !== undefined ? req.body.photoURL : (user.photoURL || user.picture),
+          role: authoritativeRole,
+          instrument: preCreatedProfile?.instrument || undefined,
+          phone: preCreatedProfile?.phone || undefined,
+          notes: preCreatedProfile?.notes || undefined,
+          status: preCreatedProfile?.status || 'active',
+          emailVerified: user.emailVerified || false,
+          createdAt: preCreatedProfile?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          googleConnected: true,
+        };
+        await userDocRef.set(profileData);
+      } else {
+        const existing = userSnap.data();
+        profileData = {
+          ...existing,
+          uid: user.uid,
+          email: user.email || existing.email,
+          role: authoritativeRole,
+          displayName: req.body?.displayName || existing.displayName || user.name,
+          photoURL: req.body?.photoURL !== undefined ? req.body.photoURL : (existing.photoURL || user.photoURL || user.picture),
+          updatedAt: new Date().toISOString(),
+        };
+        await userDocRef.update(profileData);
+      }
+    } catch (fsWriteErr: any) {
+      console.warn('[API /api/auth/sync] Firestore write warning:', fsWriteErr?.message || fsWriteErr);
+      if (!profileData) {
+        profileData = {
+          uid: user.uid,
+          email: user.email || userEmailNormalized,
+          displayName: req.body?.displayName || user.name || user.email?.split('@')[0] || 'Usuario Judá',
+          photoURL: req.body?.photoURL !== undefined ? req.body.photoURL : (user.photoURL || user.picture),
+          role: authoritativeRole,
+          status: 'active',
+          emailVerified: user.emailVerified || false,
+          updatedAt: new Date().toISOString(),
+          googleConnected: true,
+        };
+      }
+    }
+
+    return res.json({
+      success: true,
+      role: authoritativeRole,
+      user: profileData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error('[API /api/auth/sync] Error:', err);
+    return res.status(500).json({
+      error: 'SYNC_ERROR',
+      message: 'Error al sincronizar perfil: ' + (err?.message || err),
+    });
+  }
+});
+
+// 1.2.1. Actualización Manual de Foto de Perfil (Cualquier usuario autenticado para su propio perfil)
+app.post('/api/user/photo', requireAuth, async (req, res) => {
+  try {
+    const user = req.user!;
+    const { photoURL } = req.body;
+
+    // photoURL can be string (data URL or http(s) URL) or null (to remove)
+    if (photoURL !== null && typeof photoURL !== 'string') {
+      return res.status(400).json({ error: 'INVALID_PHOTO', message: 'photoURL debe ser una cadena válida o null' });
+    }
+
+    // Safety check on size (max 5MB for base64 data)
+    if (typeof photoURL === 'string' && photoURL.length > 5 * 1024 * 1024) {
+      return res.status(400).json({ error: 'FILE_TOO_LARGE', message: 'La imagen excede el límite permitido de 5MB' });
+    }
+
+    const firestore = getAdminFirestore();
+    const userDocRef = firestore.collection('users').doc(user.uid);
+    const updatePayload: any = {
+      photoURL: photoURL || null,
+      updatedAt: new Date().toISOString(),
+    };
+    await userDocRef.set(updatePayload, { merge: true });
+
+    // Also update Firebase Auth profile photoURL if service credentials exist (short URLs only, not long data URIs)
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_CLIENT_EMAIL) {
+      try {
+        const adminAuth = getAdminAuth();
+        if (!photoURL || (!photoURL.startsWith('data:') && photoURL.length < 2000)) {
+          await adminAuth.updateUser(user.uid, {
+            photoURL: photoURL || null,
+          });
+        }
+      } catch (authErr) {
+        console.warn('[API /api/user/photo] Auth updateUser photo note:', authErr);
+      }
+    }
+
+    return res.json({
+      success: true,
+      photoURL: photoURL || null,
+      message: photoURL ? 'Foto de perfil actualizada exitosamente' : 'Foto de perfil eliminada exitosamente',
+      updatedAt: updatePayload.updatedAt,
+    });
+  } catch (err: any) {
+    console.error('[API /api/user/photo] Error:', err);
+    return res.status(500).json({ error: 'UPDATE_PHOTO_ERROR', message: err.message });
+  }
+});
+
+// 1.3. Gestión de Usuarios y Roles (Exclusivo Administrador y Superadministrador)
+app.get('/api/admin/users', requireAuth, requireRole(['superadmin', 'admin']), async (req, res) => {
+  try {
+    const firestore = getAdminFirestore();
+    const snap = await firestore.collection('users').get();
+    const users: any[] = [];
+    snap.forEach(d => users.push(d.data()));
+    return res.json({ success: true, users });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'FETCH_ERROR', message: err.message });
+  }
+});
+
+app.post('/api/admin/users', requireAuth, requireRole(['superadmin', 'admin']), async (req, res) => {
+  const caller = req.user!;
+  const firestore = getAdminFirestore();
+  const { email, displayName, role, status, instrument, phone, notes } = req.body;
+
+  if (!email || !displayName || !role) {
+    return res.status(400).json({ error: 'MISSING_FIELDS', message: 'Nombre, correo y rol son requeridos.' });
+  }
+
+  if (role === 'superadmin' && caller.role !== 'superadmin') {
+    return res.status(403).json({ error: 'FORBIDDEN', message: 'Solo el Superadministrador puede asignar el rol de Superadministrador.' });
+  }
+
+  try {
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailKey = normalizedEmail.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    // Verificar si ya existe un usuario con este correo
+    const existingSnap = await firestore.collection('users').where('email', '==', normalizedEmail).get();
+    let targetUid: string;
+
+    if (!existingSnap.empty) {
+      targetUid = existingSnap.docs[0].id;
+    } else {
+      targetUid = 'pre_' + emailKey;
+    }
+
+    const newUserDoc = {
+      uid: targetUid,
+      email: normalizedEmail,
+      displayName: displayName.trim(),
+      role,
+      status: status || 'active',
+      instrument: instrument ? instrument.trim() : undefined,
+      phone: phone ? phone.trim() : undefined,
+      notes: notes ? notes.trim() : undefined,
+      emailVerified: false,
+      googleConnected: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await firestore.collection('users').doc(targetUid).set(newUserDoc, { merge: true });
+
+    // Sincronizar /admins
+    if (role === 'superadmin' || role === 'admin') {
+      await firestore.collection('admins').doc(targetUid).set({
+        uid: targetUid,
+        email: normalizedEmail,
+        role,
+        grantedBy: caller.uid,
+        createdAt: new Date().toISOString(),
+      });
+      if (targetUid.startsWith('pre_')) {
+        await firestore.collection('admins').doc(emailKey).set({
+          uid: targetUid,
+          email: normalizedEmail,
+          role,
+          grantedBy: caller.uid,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    } else {
+      await firestore.collection('admins').doc(targetUid).delete().catch(() => {});
+      await firestore.collection('admins').doc(emailKey).delete().catch(() => {});
+    }
+
+    // Sincronizar /teachers
+    if (role === 'teacher') {
+      await firestore.collection('teachers').doc(targetUid).set({
+        uid: targetUid,
+        email: normalizedEmail,
+        specialties: [instrument || 'Música'],
+        createdAt: new Date().toISOString(),
+      });
+      if (targetUid.startsWith('pre_')) {
+        await firestore.collection('teachers').doc(emailKey).set({
+          uid: targetUid,
+          email: normalizedEmail,
+          specialties: [instrument || 'Música'],
+          createdAt: new Date().toISOString(),
+        });
+      }
+    } else {
+      await firestore.collection('teachers').doc(targetUid).delete().catch(() => {});
+      await firestore.collection('teachers').doc(emailKey).delete().catch(() => {});
+    }
+
+    return res.json({ success: true, user: newUserDoc });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'CREATE_ERROR', message: err.message });
+  }
+});
+
+app.put('/api/admin/users/:userId', requireAuth, requireRole(['superadmin', 'admin']), async (req, res) => {
+  const caller = req.user!;
+  const { userId } = req.params;
+  const firestore = getAdminFirestore();
+  const { displayName, role, status, instrument, phone, notes } = req.body;
+
+  try {
+    const userDocRef = firestore.collection('users').doc(userId);
+    const snap = await userDocRef.get();
+
+    if (!snap.exists) {
+      return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'Usuario no encontrado.' });
+    }
+
+    const currentData = snap.data()!;
+
+    if ((currentData.role === 'superadmin' || role === 'superadmin') && caller.role !== 'superadmin') {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Solo el Superadministrador puede modificar usuarios con rol Superadministrador.' });
+    }
+
+    const updatedData = {
+      ...currentData,
+      displayName: displayName ? displayName.trim() : currentData.displayName,
+      role: role || currentData.role,
+      status: status || currentData.status,
+      instrument: instrument !== undefined ? instrument.trim() : currentData.instrument,
+      phone: phone !== undefined ? phone.trim() : currentData.phone,
+      notes: notes !== undefined ? notes.trim() : currentData.notes,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await userDocRef.update(updatedData);
+
+    const emailKey = (currentData.email || '').toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    // Sincronizar admins
+    if (updatedData.role === 'superadmin' || updatedData.role === 'admin') {
+      await firestore.collection('admins').doc(userId).set({
+        uid: userId,
+        email: currentData.email,
+        role: updatedData.role,
+        grantedBy: caller.uid,
+        createdAt: new Date().toISOString(),
+      }, { merge: true });
+    } else {
+      await firestore.collection('admins').doc(userId).delete().catch(() => {});
+      if (emailKey) await firestore.collection('admins').doc(emailKey).delete().catch(() => {});
+    }
+
+    // Sincronizar teachers
+    if (updatedData.role === 'teacher') {
+      await firestore.collection('teachers').doc(userId).set({
+        uid: userId,
+        email: currentData.email,
+        specialties: [updatedData.instrument || 'Música'],
+        createdAt: new Date().toISOString(),
+      }, { merge: true });
+    } else {
+      await firestore.collection('teachers').doc(userId).delete().catch(() => {});
+      if (emailKey) await firestore.collection('teachers').doc(emailKey).delete().catch(() => {});
+    }
+
+    return res.json({ success: true, user: updatedData });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'UPDATE_ERROR', message: err.message });
+  }
+});
+
+app.delete('/api/admin/users/:userId', requireAuth, requireRole(['superadmin', 'admin']), async (req, res) => {
+  const caller = req.user!;
+  const { userId } = req.params;
+  const firestore = getAdminFirestore();
+
+  try {
+    const userDocRef = firestore.collection('users').doc(userId);
+    const snap = await userDocRef.get();
+
+    if (snap.exists) {
+      const data = snap.data()!;
+      if (data.role === 'superadmin' && caller.role !== 'superadmin') {
+        return res.status(403).json({ error: 'FORBIDDEN', message: 'No puedes eliminar a un Superadministrador.' });
+      }
+      const emailKey = (data.email || '').toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+      await firestore.collection('admins').doc(userId).delete().catch(() => {});
+      await firestore.collection('teachers').doc(userId).delete().catch(() => {});
+      if (emailKey) {
+        await firestore.collection('admins').doc(emailKey).delete().catch(() => {});
+        await firestore.collection('teachers').doc(emailKey).delete().catch(() => {});
+      }
+    }
+
+    await userDocRef.delete();
+    return res.json({ success: true, message: 'Usuario eliminado correctamente.' });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'DELETE_ERROR', message: err.message });
+  }
 });
 
 // 2. Fetch server-validated payments list (Protegido con Firebase Admin y control RBAC)

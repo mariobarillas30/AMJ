@@ -1,38 +1,71 @@
-<svg viewBox="0 0 320 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="juda-gold-standalone" x1="10" y1="10" x2="100" y2="120" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#C88E3D" />
-      <stop offset="45%" stop-color="#A06726" />
-      <stop offset="100%" stop-color="#784717" />
-    </linearGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Solid Background Matching User Upload Exactly -->
+  <rect width="1024" height="1024" fill="#71421c"/>
 
-  <!-- LEÓN DE JUDÁ -->
-  <g id="lion-emblem">
-    <path d="M34 16 C42 8 54 7 62 12 C56 17 48 21 51 29 C53 34 58 36 61 41 C54 41 46 37 44 46 C41 53 48 58 51 63 C43 63 36 56 33 68 C30 78 37 83 39 90 C32 88 27 78 25 71 C22 61 27 51 30 42 C33 32 28 24 34 16 Z" fill="url(#juda-gold-standalone)" />
-    <path d="M18 36 C23 29 31 27 36 32 C31 37 26 42 29 49 C24 46 19 42 18 36 Z" fill="url(#juda-gold-standalone)" />
-    <path d="M14 54 C19 49 26 49 29 54 C24 59 19 64 17 73 C12 66 12 59 14 54 Z" fill="url(#juda-gold-standalone)" />
-    <path d="M16 78 C21 75 26 77 28 84 C23 89 18 96 21 106 C14 98 14 87 16 78 Z" fill="url(#juda-gold-standalone)" />
-    <path d="M46 44 C51 40 58 42 62 46 C58 47 52 46 50 49 C48 48 46 46 46 44 Z" fill="url(#juda-gold-standalone)" />
-    <circle cx="54" cy="49" r="2.8" fill="url(#juda-gold-standalone)" />
-    <path d="M58 60 C62 57 66 57 69 60 C65 63 62 65 58 60 Z" fill="url(#juda-gold-standalone)" />
-    <path d="M64 63 L64 68 M60 69 C64 72 65 72 69 69" stroke="url(#juda-gold-standalone)" stroke-width="2.2" stroke-linecap="round" />
+  <!-- Outer White Circle -->
+  <circle cx="512" cy="512" r="404" fill="#FFFFFF"/>
+
+  <!-- Inner Black Concentric Circle Ring -->
+  <circle cx="512" cy="512" r="350" fill="none" stroke="#111111" stroke-width="26"/>
+
+  <!-- LION HALF (Left Side) in Institutional Brown -->
+  <g fill="#71421c">
+    <!-- Main Outer Flowing Mane Silhouette -->
+    <!-- Top lock curving up and left -->
+    <path d="M 572 214
+             C 504 214 430 248 376 304
+             C 334 348 330 392 342 432
+             C 310 440 282 476 282 524
+             C 282 576 318 630 366 668
+             C 396 690 430 710 464 728
+             C 424 700 392 662 372 618
+             C 344 564 342 510 370 456
+             C 388 420 404 394 394 350
+             C 384 306 422 262 478 236
+             C 502 226 534 218 572 214 Z"/>
+
+    <!-- Second Mane Layer / Inner Arc -->
+    <path d="M 572 284
+             C 524 292 476 330 456 376
+             C 436 422 446 470 476 508
+             C 448 488 430 452 438 414
+             C 448 370 494 332 542 314
+             L 572 284 Z"/>
+
+    <!-- Forehead & Eyebrow Structure -->
+    <path d="M 572 376
+             C 536 394 506 426 498 464
+             C 528 454 550 444 572 444 Z"/>
+
+    <!-- Eye Slit / Brow Accent -->
+    <path d="M 572 472
+             C 540 480 518 502 518 522
+             C 540 530 560 522 572 514 Z"/>
+
+    <!-- Nose Triangle at the Midline -->
+    <path d="M 572 546
+             L 532 574
+             L 572 586 Z"/>
+
+    <!-- Snout / Chin Curve -->
+    <path d="M 572 602
+             C 542 612 524 630 514 650
+             C 538 654 556 642 572 632 Z"/>
   </g>
 
-  <!-- NOTA MUSICAL / LETRA 'J' -->
-  <g id="musical-j" fill="#1C1917">
-    <ellipse cx="54" cy="102" rx="23" ry="16" transform="rotate(-26 54 102)" />
-    <path d="M66 98 L66 22 C66 14 73 8 82 8 C89 8 95 13 97 21 C90 16 82 18 77 25 L77 98 C73 98 69 98 66 98 Z" />
-  </g>
+  <!-- MUSICAL NOTE HALF (Right Side) in Solid Black -->
+  <g fill="#111111">
+    <!-- Vertical Note Stem Along the Midline -->
+    <rect x="562" y="214" width="20" height="490" rx="3"/>
 
-  <!-- TIPOGRAFÍA "udá" -->
-  <g id="typography-uda" fill="#1C1917">
-    <path d="M108 52 L116 52 L116 78 C116 83 119 86 124 86 C129 86 133 82 133 76 L133 52 L141 52 L141 88 L133 88 L133 82 C130 86 125 89 119 89 C111 89 108 82 108 74 L108 52 Z" />
-    <path d="M152 70 C152 58 160 50 170 50 C176 50 180 53 183 57 L183 24 L191 24 L191 88 L183 88 L183 82 C180 86 175 89 169 89 C159 89 152 80 152 70 Z M183 70 C183 60 178 56 172 56 C165 56 160 61 160 70 C160 78 165 83 172 83 C178 83 183 78 183 70 Z" />
-    <path d="M202 70 C202 58 211 50 221 50 C230 50 236 56 236 66 L236 88 L228 88 L228 82 C225 86 220 89 214 89 C206 89 202 83 202 76 C202 68 208 63 218 63 L228 63 L228 62 C228 57 225 55 220 55 C215 55 212 57 210 60 L203 57 C207 52 213 49 221 49 C230 49 236 54 236 64 L236 88 L228 88 L228 82 C225 86 220 89 214 89 Z M228 70 L228 67 L219 67 C213 67 210 70 210 74 C210 78 213 81 218 81 C224 81 228 77 228 70 Z" />
-    <path d="M228 36 L236 30 L239 34 L231 40 Z" />
-  </g>
+    <!-- Dynamic Note Flag / Corchete Curving Right -->
+    <path d="M 582 214
+             C 630 268 716 352 716 478
+             C 716 580 646 660 582 716
+             C 650 644 690 568 690 486
+             C 690 382 632 290 582 214 Z"/>
 
-  <!-- SUBTÍTULO "music" -->
-  <text x="108" y="114" fill="#292524" font-size="21" font-family="system-ui, sans-serif" font-weight="300" letter-spacing="6">music</text>
+    <!-- Angled Musical Note Head at the Base -->
+    <ellipse cx="494" cy="728" rx="106" ry="76" transform="rotate(-30 494 728)"/>
+  </g>
 </svg>

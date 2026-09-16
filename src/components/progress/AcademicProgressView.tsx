@@ -242,7 +242,7 @@ export const AcademicProgressView: React.FC<AcademicProgressViewProps> = ({ onNa
           <div className="space-y-3 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-3 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-wider">
-                FASE 09 • PROGRESO ACADÉMICO
+                SEGUIMIENTO ACADÉMICO
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" />

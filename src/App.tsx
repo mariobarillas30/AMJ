@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import React, { useState, useEffect, useRef } from 'react';
+import { AuthProvider, useAuth, getPortalRouteForRole } from './context/AuthContext';
+import { SiteBrandingProvider } from './context/SiteBrandingContext';
 import { Header } from './components/common/Header';
 import { AuthModal } from './components/auth/AuthModal';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
@@ -19,9 +20,33 @@ import { ActiveNavRoute, AuthMode } from './types';
 import { Music, ShieldCheck, Video, Heart } from 'lucide-react';
 
 const AppContent: React.FC = () => {
+  const { currentUser, role, loading } = useAuth();
   const [currentRoute, setCurrentRoute] = useState<ActiveNavRoute>('home');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<AuthMode>('login');
+
+  // Track previous authenticated user ID to detect fresh logins and redirect to their assigned portal
+  const prevUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const currentUserId = currentUser ? currentUser.uid : null;
+
+    // Detect user login event
+    if (currentUserId && prevUserIdRef.current !== currentUserId) {
+      const targetPortal = getPortalRouteForRole(role);
+      // If user was at home or login modal, seamlessly navigate to their authoritative portal
+      if (currentRoute === 'home') {
+        setCurrentRoute(targetPortal);
+      }
+    } else if (!currentUserId && prevUserIdRef.current !== null) {
+      // User logged out
+      setCurrentRoute('home');
+    }
+
+    prevUserIdRef.current = currentUserId;
+  }, [currentUser, role, loading, currentRoute]);
 
   const handleOpenAuth = (mode: AuthMode = 'login') => {
     setAuthModalMode(mode);
@@ -52,7 +77,7 @@ const AppContent: React.FC = () => {
         )}
 
         {currentRoute === 'profile' && (
-          <ProtectedRoute onOpenAuth={() => handleOpenAuth('login')}>
+          <ProtectedRoute onOpenAuth={() => handleOpenAuth('login')} onNavigate={setCurrentRoute}>
             <ProfileView />
           </ProtectedRoute>
         )}
@@ -61,6 +86,7 @@ const AppContent: React.FC = () => {
           <ProtectedRoute
             allowedRoles={['student', 'teacher', 'admin', 'superadmin']}
             onOpenAuth={() => handleOpenAuth('login')}
+            onNavigate={setCurrentRoute}
           >
             <StudentPortalView onNavigate={setCurrentRoute} />
           </ProtectedRoute>
@@ -70,6 +96,7 @@ const AppContent: React.FC = () => {
           <ProtectedRoute
             allowedRoles={['teacher', 'admin', 'superadmin']}
             onOpenAuth={() => handleOpenAuth('login')}
+            onNavigate={setCurrentRoute}
           >
             <TeacherPortalView onNavigate={setCurrentRoute} />
           </ProtectedRoute>
@@ -83,8 +110,9 @@ const AppContent: React.FC = () => {
           <ProtectedRoute
             allowedRoles={['admin', 'superadmin']}
             onOpenAuth={() => handleOpenAuth('login')}
+            onNavigate={setCurrentRoute}
           >
-            <AdminDashboardView initialTab="integraciones" />
+            <AdminDashboardView initialTab="usuarios" />
           </ProtectedRoute>
         )}
 
@@ -92,8 +120,9 @@ const AppContent: React.FC = () => {
           <ProtectedRoute
             allowedRoles={['admin', 'superadmin']}
             onOpenAuth={() => handleOpenAuth('login')}
+            onNavigate={setCurrentRoute}
           >
-            <AdminDashboardView initialTab="roles" />
+            <AdminDashboardView initialTab="usuarios" />
           </ProtectedRoute>
         )}
 
@@ -117,7 +146,7 @@ const AppContent: React.FC = () => {
             <JudaLogo size="md" variant="full" theme="dark" className="h-10" />
             <div className="border-l border-stone-800 pl-3">
               <p className="text-[11px] text-stone-400 max-w-xs">
-                Sistema Central de Formación Musical & Google Workspace Satélite
+                Plataforma Educativa Segura | Integrada con Google Workspace
               </p>
             </div>
           </div>
@@ -125,7 +154,7 @@ const AppContent: React.FC = () => {
           <div className="flex flex-wrap items-center gap-6 text-[11px] text-stone-400">
             <span className="flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-              <span>Autorización Zero-Trust & Firestore Criptográfico</span>
+              <span>Inicio de Sesión Seguro | Protección de Datos</span>
             </span>
             <span className="flex items-center gap-1.5">
               <Video className="w-3.5 h-3.5 text-sky-400" />
@@ -158,7 +187,9 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <SiteBrandingProvider>
+        <AppContent />
+      </SiteBrandingProvider>
     </AuthProvider>
   );
 }

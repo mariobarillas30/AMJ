@@ -193,7 +193,7 @@ export const SecureVideoPlayer: React.FC<SecureVideoPlayerProps> = ({
           </div>
           <div>
             <h4 className="text-xs font-serif font-bold text-amber-400 uppercase tracking-wider">
-              Streaming Institucional Judá • Zero-Trust
+              Streaming Institucional Judá • Reproducción Protegida
             </h4>
             <p className="text-[11px] text-stone-400">
               Videos premium tokenizados • Nunca expuestos en URLs públicas ni en Google Drive

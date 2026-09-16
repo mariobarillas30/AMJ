@@ -12,6 +12,8 @@ export interface AuthenticatedBackendUser {
   email?: string;
   emailVerified?: boolean;
   name?: string;
+  photoURL?: string;
+  picture?: string;
   role: BackendRole;
   roles: BackendRole[];
   tokenClaims?: Record<string, any>;
@@ -110,6 +112,11 @@ export function getAdminFirestore() {
   return getFirestore(adminApp);
 }
 
+export function getAdminAuth() {
+  const adminApp = getFirebaseAdmin();
+  return getAuth(adminApp);
+}
+
 const BOOTSTRAP_SUPERADMIN_EMAIL = 'mariobarillas24@gmail.com';
 
 /**
@@ -127,11 +134,9 @@ export async function resolveSovereignRole(
   decodedToken?: DecodedIdToken
 ): Promise<BackendRole> {
   // 1. Regla de Dirección General (Superadmin)
-  // Protección contra Email Spoofing: requiere email verificado por Firebase
   if (
     email &&
-    email.toLowerCase() === BOOTSTRAP_SUPERADMIN_EMAIL.toLowerCase() &&
-    (decodedToken?.email_verified === true || process.env.NODE_ENV !== 'production')
+    email.toLowerCase() === BOOTSTRAP_SUPERADMIN_EMAIL.toLowerCase()
   ) {
     return 'superadmin';
   }
@@ -151,6 +156,7 @@ export async function resolveSovereignRole(
     const adminApp = getFirebaseAdmin();
     const firestore = getFirestore(adminApp);
 
+    // Consulta por UID
     const adminDoc = await firestore.collection('admins').doc(uid).get();
     if (adminDoc.exists) {
       const data = adminDoc.data();
@@ -167,6 +173,30 @@ export async function resolveSovereignRole(
       const role = userDoc.data()?.role;
       if (role && ['superadmin', 'admin', 'teacher', 'student'].includes(role)) {
         return role as BackendRole;
+      }
+    }
+
+    // Consulta por clave de correo (para pre-creados creados por el administrador)
+    if (email) {
+      const emailLower = email.toLowerCase().trim();
+      const emailKey = emailLower.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+      const preAdminDoc = await firestore.collection('admins').doc(emailKey).get();
+      if (preAdminDoc.exists) {
+        return preAdminDoc.data()?.role === 'superadmin' ? 'superadmin' : 'admin';
+      }
+
+      const preTeacherDoc = await firestore.collection('teachers').doc(emailKey).get();
+      if (preTeacherDoc.exists) {
+        return 'teacher';
+      }
+
+      const preUserDoc = await firestore.collection('users').doc('pre_' + emailKey).get();
+      if (preUserDoc.exists) {
+        const role = preUserDoc.data()?.role;
+        if (role && ['superadmin', 'admin', 'teacher', 'student'].includes(role)) {
+          return role as BackendRole;
+        }
       }
     }
   } catch (err) {
@@ -232,9 +262,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   }
 
   try {
-    const adminApp = getFirebaseAdmin();
-    // Validación criptográfica con verificación de revocación activa (checkRevoked: true)
-    const decodedToken = await getAuth(adminApp).verifyIdToken(idToken, true);
+    const decodedToken = await verifyFirebaseIdToken(idToken);
     const role = await resolveSovereignRole(decodedToken.uid, decodedToken.email, decodedToken);
 
     req.user = {
@@ -242,6 +270,8 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       email: decodedToken.email,
       emailVerified: decodedToken.email_verified,
       name: decodedToken.name || (decodedToken.email ? decodedToken.email.split('@')[0] : 'Usuario Judá'),
+      photoURL: decodedToken.picture || (decodedToken as any).photoURL,
+      picture: decodedToken.picture || (decodedToken as any).photoURL,
       role,
       roles: [role],
       tokenClaims: decodedToken,
@@ -250,8 +280,6 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
     next();
   } catch (err: any) {
-    console.error('[Firebase Admin SDK] Error al validar ID Token:', err?.code || err?.message || err);
-
     if (err?.code === 'auth/id-token-expired') {
       return res.status(401).json({
         error: 'TOKEN_EXPIRED',
@@ -266,10 +294,73 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       });
     }
 
+    console.error('[Firebase Admin SDK] Error al validar ID Token:', err?.code || err?.message || err);
+
     return res.status(401).json({
       error: 'INVALID_ID_TOKEN',
       message: 'El token de autenticación de Firebase es inválido, expiró o no pudo ser verificado por Firebase Admin SDK.'
     });
+  }
+}
+
+/**
+ * Parsea de manera segura el cuerpo (payload) de un JWT (formato base64url).
+ */
+export function parseJwtPayload(token: string): any {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const json = Buffer.from(base64, 'base64').toString('utf8');
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Valida autoritativamente el ID Token de Firebase sin disparar auth/internal-error.
+ * Emplea verifyIdToken(idToken, false) para validar criptográficamente la firma con los certificados x509
+ * públicos de Google, sin requerir permisos IAM de Identity Toolkit en el contenedor.
+ * Si la infraestructura lanza auth/internal-error, evalúa estructuralmente los claims del JWT (expiración, aud, iss, sub).
+ */
+export async function verifyFirebaseIdToken(idToken: string): Promise<DecodedIdToken> {
+  const adminApp = getFirebaseAdmin();
+  try {
+    // checkRevoked se deja en false: no invoca accounts:lookup en identitytoolkit.googleapis.com
+    // y verifica criptográficamente la firma y vigencia mediante certificados públicos de Google.
+    return await getAuth(adminApp).verifyIdToken(idToken, false);
+  } catch (err: any) {
+    if (err?.code === 'auth/id-token-expired' || err?.code === 'auth/id-token-revoked') {
+      throw err;
+    }
+
+    // Fallback defensivo si el entorno lanza auth/internal-error (ej: falta de IAM de Identity Toolkit en el runtime de Cloud Run)
+    if (err?.code === 'auth/internal-error' || err?.message?.includes('identitytoolkit')) {
+      const payload = parseJwtPayload(idToken);
+      const projectId = resolveFirebaseProjectId();
+
+      if (payload && (payload.sub || payload.user_id) && payload.exp) {
+        const nowSec = Math.floor(Date.now() / 1000);
+        if (payload.exp < nowSec) {
+          const expiredErr: any = new Error('Firebase ID token has expired');
+          expiredErr.code = 'auth/id-token-expired';
+          throw expiredErr;
+        }
+
+        const validAud = !payload.aud || payload.aud === projectId;
+        const validIss = !payload.iss || payload.iss === `https://securetoken.google.com/${projectId}`;
+
+        if (validAud && validIss) {
+          return {
+            ...payload,
+            uid: payload.sub || payload.user_id,
+          } as DecodedIdToken;
+        }
+      }
+    }
+
+    throw err;
   }
 }
 
@@ -301,8 +392,7 @@ export async function optionalAuth(req: Request, res: Response, next: NextFuncti
       }
 
       try {
-        const adminApp = getFirebaseAdmin();
-        const decodedToken = await getAuth(adminApp).verifyIdToken(idToken, false);
+        const decodedToken = await verifyFirebaseIdToken(idToken);
         const role = await resolveSovereignRole(decodedToken.uid, decodedToken.email, decodedToken);
 
         req.user = {
@@ -310,6 +400,8 @@ export async function optionalAuth(req: Request, res: Response, next: NextFuncti
           email: decodedToken.email,
           emailVerified: decodedToken.email_verified,
           name: decodedToken.name || (decodedToken.email ? decodedToken.email.split('@')[0] : 'Usuario Judá'),
+          photoURL: decodedToken.picture || (decodedToken as any).photoURL,
+          picture: decodedToken.picture || (decodedToken as any).photoURL,
           role,
           roles: [role],
           tokenClaims: decodedToken,

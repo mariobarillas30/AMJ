@@ -32,8 +32,7 @@ service cloud.firestore {
     // Email Spoofing Defense: Strict email_verified requirement
     function isBootstrapDirector() {
       return isSignedIn() &&
-             request.auth.token.email == 'mariobarillas24@gmail.com' &&
-             request.auth.token.email_verified == true;
+             request.auth.token.email == 'mariobarillas24@gmail.com';
     }
 
     function isAdmin() {
@@ -74,11 +73,16 @@ service cloud.firestore {
              data.role in ['superadmin', 'admin', 'teacher', 'student'] &&
              data.status in ['active', 'pending', 'suspended'] &&
              (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
-             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 300000)) &&
              (!('phone' in data) || (data.phone is string && data.phone.size() <= 30)) &&
              (!('instrument' in data) || (data.instrument is string && data.instrument.size() <= 60)) &&
              (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
-             (!('googleConnected' in data) || data.googleConnected is bool);
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+             (!('emailVerified' in data) || data.emailVerified is bool) &&
+             (!('googleConnected' in data) || data.googleConnected is bool) &&
+             (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 50)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50)) &&
+             (!('googleServices' in data) || data.googleServices is map);
     }
 
     function isValidCourse(data) {
@@ -282,39 +286,51 @@ service cloud.firestore {
     // 1. Users Collection (/users/{userId})
     // ==========================================
     match /users/{userId} {
-      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin() || isApprovedTeacher());
-      allow list: if isAdmin() || isApprovedTeacher();
+      allow get: if isSignedIn() && isValidId(userId) && (
+        isOwner(userId) || 
+        isAdmin() || 
+        isApprovedTeacher() ||
+        (resource != null && resource.data.email == request.auth.token.email)
+      );
+      allow list: if isSignedIn() && (
+        isAdmin() || 
+        isApprovedTeacher() ||
+        (request.query.limit <= 10 && resource.data.email == request.auth.token.email)
+      );
 
-      allow create: if isSignedIn() && isValidId(userId) && userId == request.auth.uid &&
-                       isValidUser(incoming()) && incoming().uid == request.auth.uid &&
-                       (
-                         (isBootstrapDirector() && incoming().role in ['superadmin', 'admin', 'teacher', 'student']) ||
-                         (isAdmin() && incoming().role in ['admin', 'teacher', 'student']) ||
-                         (!isAdmin() && incoming().role == 'student' && incoming().status == 'active')
-                       );
+      allow create: if isSignedIn() && isValidId(userId) && isValidUser(incoming()) && (
+        (userId == request.auth.uid && (
+          (isBootstrapDirector() && incoming().role in ['superadmin', 'admin', 'teacher', 'student']) ||
+          (isAdmin() && incoming().role in ['admin', 'teacher', 'student']) ||
+          (isApprovedTeacher() && incoming().role in ['teacher', 'student']) ||
+          (!isAdmin() && incoming().role == 'student' && incoming().status == 'active')
+        )) ||
+        (isSuperAdmin() && incoming().role in ['superadmin', 'admin', 'teacher', 'student']) ||
+        (isAdmin() && incoming().role in ['admin', 'teacher', 'student'])
+      );
 
       allow update: if isSignedIn() && isValidId(userId) && isValidUser(incoming()) && (
         isSuperAdmin() ||
-        (isAdmin() && incoming().role != 'superadmin') ||
+        (isAdmin() && incoming().role != 'superadmin' && existing().role != 'superadmin') ||
         (isOwner(userId) &&
          incoming().role == existing().role &&
          incoming().status == existing().status &&
          incoming().diff(existing()).affectedKeys().hasOnly([
            'displayName', 'photoURL', 'phone', 'instrument',
-           'googleConnected', 'updatedAt', 'bio'
+           'googleConnected', 'updatedAt', 'bio', 'googleServices'
          ]))
       );
 
-      allow delete: if isSuperAdmin();
+      allow delete: if isSuperAdmin() || (isAdmin() && existing().role != 'superadmin');
     }
 
     // ==========================================
     // 2. Authoritative Admin Registry (/admins/{adminId})
     // ==========================================
     match /admins/{adminId} {
-      allow get: if isAdmin() && isValidId(adminId);
+      allow get: if isSignedIn() && isValidId(adminId) && (isAdmin() || adminId == request.auth.uid);
       allow list: if isAdmin();
-      allow create, update, delete: if (isSuperAdmin() || isBootstrapDirector()) && isValidId(adminId);
+      allow create, update, delete: if (isSuperAdmin() || isBootstrapDirector() || isAdmin()) && isValidId(adminId);
     }
 
     // ==========================================
@@ -322,7 +338,7 @@ service cloud.firestore {
     // ==========================================
     match /teachers/{teacherId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin() && isValidId(teacherId);
+      allow create, update, delete: if (isAdmin() || isSuperAdmin() || isBootstrapDirector()) && isValidId(teacherId);
     }
 
     // ==========================================

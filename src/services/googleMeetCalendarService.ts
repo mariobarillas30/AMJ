@@ -153,11 +153,11 @@ class GoogleMeetCalendarService {
       description: payload.description,
       start: {
         dateTime: payload.startDateTime,
-        timeZone: payload.timeZone || 'America/Guatemala'
+        timeZone: payload.timeZone || 'America/El_Salvador'
       },
       end: {
         dateTime: payload.endDateTime,
-        timeZone: payload.timeZone || 'America/Guatemala'
+        timeZone: payload.timeZone || 'America/El_Salvador'
       },
       conferenceData: {
         createRequest: {

@@ -100,7 +100,7 @@ export const AdminIntegrationsTab: React.FC = () => {
           </div>
           <h2 className="font-serif text-2xl font-bold text-stone-900 flex items-center gap-2">
             <Building2 className="w-6 h-6 text-amber-600" />
-            <span>Estado de Conexión & Servicios Satélite</span>
+            <span>Estado de Conexión & Servicios Google Workspace</span>
           </h2>
           <p className="text-xs text-stone-600 mt-1 max-w-2xl">
             Supervisión institucional de Google Meet, Google Drive y Google Classroom. Monitoreo en tiempo real de salud, latencia y sincronización con estricta protección de privacidad.
@@ -146,14 +146,14 @@ export const AdminIntegrationsTab: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-stone-300 mt-1 leading-relaxed">
-              Este panel opera bajo la directiva institucional Zero-Secret: <strong>no expone tokens privados, refresh tokens, client_secrets ni credenciales crudas en el navegador</strong>. Toda la auditoría se efectúa mediante verificación de estado declarativo y validación de scopes por rol.
+              Este panel opera bajo la directiva institucional Zero-Secret: <strong>no expone tokens privados, refresh tokens, client_secrets ni credenciales crudas en el navegador</strong>. Toda la supervisión se efectúa mediante verificación de estado declarativo y validación de scopes por rol.
             </p>
           </div>
         </div>
 
         <div className="shrink-0 flex items-center gap-2 bg-stone-800/80 px-3 py-1.5 rounded-lg border border-stone-700 text-[11px] text-stone-300">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Cumplimiento Zero-Trust</span>
+          <span>Protección de Datos Institucional</span>
         </div>
       </div>
 
@@ -163,7 +163,7 @@ export const AdminIntegrationsTab: React.FC = () => {
           <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <h4 className="font-bold text-amber-950">
-              Nivel de Autorización: Administrador Estándar (Modo Auditoría / Solo Lectura)
+              Nivel de Autorización: Administrador Estándar (Modo Consulta / Solo Lectura)
             </h4>
             <p className="leading-relaxed text-amber-900/90">
               La arquitectura del sistema establece que <strong>la vinculación de nuevas cuentas, alteración de scopes y desconexión de servicios de Google Workspace requiere autorización exclusiva del Superadministrador</strong>. Como Administrador, puedes consultar el estado operativo, cuotas de almacenamiento y latencia, pero las acciones de re-autenticación y rotación de llaves se encuentran bloqueadas por política de seguridad.
@@ -178,7 +178,7 @@ export const AdminIntegrationsTab: React.FC = () => {
               Nivel de Autorización: Superadministrador (Dirección General)
             </h4>
             <p className="leading-relaxed text-emerald-900/90">
-              Posees autorización ejecutiva para auditar el canal de enlace satélite, disparar tests de latencia y administrar la delegación de credenciales institucionales para <strong>@judamusic.edu</strong>.
+              Posees autorización ejecutiva para supervisar el canal de enlace satélite, disparar tests de latencia y administrar la delegación de credenciales institucionales para <strong>@judamusic.edu</strong>.
             </p>
           </div>
         </div>
@@ -240,7 +240,7 @@ export const AdminIntegrationsTab: React.FC = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-amber-700 font-semibold">
-                <span>Ver auditoría de configuración</span>
+                <span>Ver detalles de configuración</span>
                 <span>→</span>
               </div>
             </div>
@@ -262,7 +262,7 @@ export const AdminIntegrationsTab: React.FC = () => {
                     {selectedServiceDetail.name}
                   </h3>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-stone-100 text-stone-700 border border-stone-200 uppercase font-semibold">
-                    Infraestructura Satélite
+                    Servicio Conectado
                   </span>
                 </div>
                 <p className="text-xs text-stone-500">
@@ -345,7 +345,7 @@ export const AdminIntegrationsTab: React.FC = () => {
       <div className="bg-white rounded-3xl border border-stone-200 p-6 shadow-sm space-y-4">
         <h3 className="font-serif text-base font-bold text-stone-900 flex items-center gap-2">
           <Layers className="w-5 h-5 text-amber-600" />
-          <span>Matriz de Soberanía Institucional vs Servicios Satélite</span>
+          <span>Matriz de Soberanía Institucional vs Servicios de Google</span>
         </h3>
 
         <div className="overflow-x-auto">
@@ -354,7 +354,7 @@ export const AdminIntegrationsTab: React.FC = () => {
               <tr className="border-b border-stone-200 text-stone-500 uppercase tracking-wider text-[10px]">
                 <th className="py-2.5 px-3">Dominio Académico</th>
                 <th className="py-2.5 px-3">Autoridad Central (Judá Music)</th>
-                <th className="py-2.5 px-3">Servicio Satélite (Google)</th>
+                <th className="py-2.5 px-3">Servicio Conectado (Google)</th>
                 <th className="py-2.5 px-3">Regla en Fallo de Red</th>
               </tr>
             </thead>

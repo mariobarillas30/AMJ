@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useSiteBranding } from '../../context/SiteBrandingContext';
 import { ActiveNavRoute } from '../../types';
 import { JudaLogo } from '../common/JudaLogo';
+import { InternationalPhoneInput } from '../common/InternationalPhoneInput';
 import { 
   Music, 
   Video, 
@@ -29,7 +31,8 @@ import {
   Calendar,
   Lock,
   Headphones,
-  Check
+  Check,
+  UserCheck
 } from 'lucide-react';
 
 interface HomeCatalogViewProps {
@@ -42,6 +45,7 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
   onOpenAuth,
 }) => {
   const { currentUser, role } = useAuth();
+  const { branding } = useSiteBranding();
 
   // State for interactive filters and accordions
   const [selectedInstrument, setSelectedInstrument] = useState<string>('todos');
@@ -50,7 +54,7 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
   const [contactForm, setContactForm] = useState({
     nombre: '',
     email: '',
-    telefono: '',
+    telefono: '+503 ',
     instrumento: 'Piano',
     modalidad: 'Virtual en Vivo (Google Meet)',
     mensaje: '',
@@ -59,9 +63,13 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
   const [enrollForm, setEnrollForm] = useState({
     nombre: '',
     email: '',
+    telefono: '+503 ',
+    documentoIdentidad: '',
+    esMenorDeEdad: false,
+    tutorResponsable: '',
     instrumento: 'Piano',
     modalidad: 'Virtual en Vivo (Google Meet)',
-    horario: 'Tarde (16:00 - 18:00)',
+    horario: 'Mañana (08:00 - 12:00)',
   });
   const [enrollSuccess, setEnrollSuccess] = useState(false);
 
@@ -107,8 +115,8 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
   const benefits = [
     {
       icon: <Award className="w-5 h-5 text-amber-600" />,
-      title: 'Maestros de Conservatorio',
-      desc: 'Claustro docente con formación superior en conservatorios y sólida trayectoria concertista y pedagógica.',
+      title: 'Maestros Certificados',
+      desc: 'Claustro docente con formación superior musical y sólida trayectoria concertista y pedagógica.',
     },
     {
       icon: <Radio className="w-5 h-5 text-emerald-600" />,
@@ -142,7 +150,7 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
       name: 'Mtro. Carlos Mendoza',
       instrument: 'Piano',
       title: 'Licenciado en Piano Clásico & Teclados',
-      origin: 'Conservatorio Nacional de Música',
+      origin: 'Formación Musical Superior',
       experience: '18 años de trayectoria concertista y docente',
       bio: 'Especialista en técnica rusa de piano, lectura a primera vista, contrapunto barroco y teclados contemporáneos.',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
@@ -151,7 +159,7 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
       name: 'Mtra. Valentina Chen',
       instrument: 'Violín',
       title: 'Solista & Pedagoga de Cuerdas',
-      origin: 'Orquesta Filarmónica & Conservatorio Superior',
+      origin: 'Orquesta Filarmónica & Formación Superior',
       experience: '14 años formando violinistas de concierto',
       bio: 'Enfoque en afinación precisa, arco expresivo, colocación corporal y repertorio desde el método Suzuki hasta sonatas.',
       image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
@@ -375,11 +383,16 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
 
   const handleEnrollSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      sessionStorage.setItem('pending_enrollment', JSON.stringify(enrollForm));
+    } catch {
+      // ignore
+    }
     setEnrollSuccess(true);
     setTimeout(() => {
       setEnrollSuccess(false);
       onOpenAuth();
-    }, 2000);
+    }, 1500);
   };
 
   return (
@@ -387,23 +400,37 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
       
       {/* HERO SECTION — FASE 16 */}
       <section className="relative overflow-hidden bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 text-white pt-12 pb-20 px-4 sm:px-6 lg:px-8 border-b border-stone-800">
+        {/* Dynamic Hero Background Banner */}
+        {branding?.heroImageUrl && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-20 pointer-events-none transition-all duration-500"
+            style={{ backgroundImage: `url('${branding.heroImageUrl}')` }}
+          />
+        )}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
         
         <div className="max-w-5xl mx-auto text-center relative z-10 space-y-6">
           {/* Official Brand Logo presentation */}
-          <div className="flex justify-center mb-4">
-            <JudaLogo size="xl" variant="full" theme="dark" className="h-16 sm:h-20" />
+          <div className="flex justify-center mb-2">
+            <div className="p-1.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-2xl">
+              <img
+                src={branding?.logoUrl || '/logo-amj.png'}
+                alt="Academia Musical Judá"
+                referrerPolicy="no-referrer"
+                className="w-24 h-24 sm:w-28 sm:h-28 object-contain rounded-xl shadow-lg"
+              />
+            </div>
           </div>
 
-          {/* Top Pill: ACADEMIA MUSICAL */}
+          {/* Top Pill: FORMACIÓN MUSICAL */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-400 text-xs sm:text-sm font-bold uppercase tracking-widest">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>CONSERVATORIO & FORMACIÓN MUSICAL</span>
+            <span>FORMACIÓN MUSICAL</span>
           </div>
 
           {/* Main Headline */}
           <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
-            Aprende música desde cualquier lugar
+            {branding?.heroTitle || 'Aprende música desde cualquier lugar'}
           </h1>
 
           {/* Instruments subtitle */}
@@ -418,7 +445,7 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
           </div>
 
           <p className="text-stone-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            Formación instrumental y vocal de alto nivel. Aprende con maestros concertistas mediante <strong>clases virtuales en vivo por Google Meet, modalidad presencial, online y cursos grabados</strong> con seguimiento integral de tu progreso y partituras en Google Drive.
+            {branding?.heroSubtitle || 'Formación instrumental y vocal de alto nivel. Aprende con maestros concertistas mediante clases virtuales en vivo por Google Meet, modalidad presencial, online y cursos grabados con seguimiento integral de tu progreso y partituras en Google Drive.'}
           </p>
 
           {/* CTAs */}
@@ -915,7 +942,7 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
 
           <form onSubmit={handleEnrollSubmit} className="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div className="space-y-1">
-              <label className="text-stone-300 font-semibold">Nombre y Apellido</label>
+              <label className="text-stone-300 font-semibold">Nombre y Apellido *</label>
               <input
                 type="text"
                 required
@@ -927,7 +954,7 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-stone-300 font-semibold">Correo Electrónico</label>
+              <label className="text-stone-300 font-semibold">Correo Electrónico *</label>
               <input
                 type="email"
                 required
@@ -939,16 +966,72 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
             </div>
 
             <div className="space-y-1">
+              <label className="text-stone-300 font-semibold">DUI o Pasaporte (Doc. de Identidad) *</label>
+              <input
+                type="text"
+                required
+                value={enrollForm.documentoIdentidad}
+                onChange={(e) => setEnrollForm({ ...enrollForm, documentoIdentidad: e.target.value })}
+                placeholder="Ej. 01234567-8 o N° Pasaporte"
+                className="w-full bg-stone-800/90 border border-stone-700 rounded-xl px-3.5 py-2.5 text-white placeholder-stone-500 focus:outline-none focus:border-amber-400 text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-stone-300 font-semibold">Teléfono / WhatsApp *</label>
+              <InternationalPhoneInput
+                value={enrollForm.telefono}
+                onChange={(val) => setEnrollForm({ ...enrollForm, telefono: val })}
+                placeholder="7757-3023"
+                theme="dark"
+                className="border border-stone-700 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-amber-400"
+              />
+            </div>
+
+            <div className="sm:col-span-2 p-3 rounded-xl bg-stone-800/60 border border-stone-700/60 space-y-2">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none text-stone-200">
+                <input
+                  type="checkbox"
+                  checked={enrollForm.esMenorDeEdad}
+                  onChange={(e) => setEnrollForm({ ...enrollForm, esMenorDeEdad: e.target.checked })}
+                  className="rounded border-stone-600 text-amber-500 focus:ring-amber-400 focus:ring-offset-stone-900 w-4 h-4 cursor-pointer"
+                />
+                <span className="font-semibold text-xs text-stone-200">
+                  ¿El alumno es menor de edad? (Requiere información del tutor)
+                </span>
+              </label>
+
+              {enrollForm.esMenorDeEdad && (
+                <div className="pt-1.5 space-y-1 animate-fadeIn">
+                  <label className="text-stone-300 font-semibold block text-[11px]">
+                    Nombre del padre, madre o tutor responsable *
+                  </label>
+                  <input
+                    type="text"
+                    required={enrollForm.esMenorDeEdad}
+                    value={enrollForm.tutorResponsable}
+                    onChange={(e) => setEnrollForm({ ...enrollForm, tutorResponsable: e.target.value })}
+                    placeholder="Ej. Roberto Sánchez (Padre / Tutor Legal)"
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3.5 py-2.5 text-white placeholder-stone-500 focus:outline-none focus:border-amber-400 text-xs"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1">
               <label className="text-stone-300 font-semibold">Instrumento de Interés</label>
               <select
                 value={enrollForm.instrumento}
                 onChange={(e) => setEnrollForm({ ...enrollForm, instrumento: e.target.value })}
                 className="w-full bg-stone-800/90 border border-stone-700 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs"
               >
-                <option value="Piano">Piano</option>
-                <option value="Violín">Violín</option>
-                <option value="Guitarra">Guitarra</option>
-                <option value="Canto">Canto</option>
+                <option value="Piano">Piano & Teclados</option>
+                <option value="Violín">Violín Clásico</option>
+                <option value="Guitarra">Guitarra Acústica / Eléctrica</option>
+                <option value="Canto">Canto Lírico & Contemporáneo</option>
+                <option value="Batería">Batería & Percusión</option>
+                <option value="Flauta">Flauta Traversa</option>
+                <option value="Bajo Eléctrico">Bajo Eléctrico</option>
               </select>
             </div>
 
@@ -973,17 +1056,17 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
                 onChange={(e) => setEnrollForm({ ...enrollForm, horario: e.target.value })}
                 className="w-full bg-stone-800/90 border border-stone-700 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-400 text-xs"
               >
-                <option value="Mañana (09:00 - 12:00)">Mañana (09:00 - 12:00)</option>
-                <option value="Tarde (14:00 - 17:00)">Tarde (14:00 - 17:00)</option>
+                <option value="Mañana (08:00 - 12:00)">Mañana (08:00 - 12:00)</option>
+                <option value="Tarde (13:00 - 17:00)">Tarde (13:00 - 17:00)</option>
                 <option value="Noche (18:00 - 21:00)">Noche (18:00 - 21:00)</option>
-                <option value="Sábados Intensivo">Sábados Intensivo</option>
+                <option value="Sábados Intensivo (08:00 - 16:00)">Sábados Intensivo (08:00 - 16:00)</option>
               </select>
             </div>
 
             <div className="sm:col-span-2 pt-2">
               <button
                 type="submit"
-                className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Continuar Inscripción & Crear Cuenta</span>
@@ -997,6 +1080,44 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
             )}
           </form>
         </section>
+
+        {/* INSTALACIONES & SEDE (GALERÍA PERSONALIZADA) */}
+        {branding?.facilityPhotos && branding.facilityPhotos.length > 0 && (
+          <section className="space-y-8">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                Sonsonate, El Salvador
+              </span>
+              <h2 className="font-serif text-3xl font-bold text-stone-900">
+                Nuestras Instalaciones & Espacios de Ensayo
+              </h2>
+              <p className="text-sm text-stone-600">
+                Conoce nuestras aulas equipadas, pianos de cola, cabinas de estudio insonorizadas y auditorio institucional.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {branding.facilityPhotos.map((photo, idx) => (
+                <div 
+                  key={idx}
+                  className="group relative rounded-2xl overflow-hidden border border-stone-200 bg-stone-100 shadow-sm hover:shadow-md transition-all h-52"
+                >
+                  <img
+                    src={photo}
+                    alt={`Instalación ${idx + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                    <span className="text-xs font-serif font-bold text-amber-300">
+                      Academia Musical Judá
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 9. CONTACTO & SEDE */}
         <section id="contacto" className="space-y-8">
@@ -1023,7 +1144,7 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
                   Sede Central & Cabinas
                 </h4>
                 <p className="text-xs text-stone-600 leading-relaxed">
-                  Av. Las Bellas Artes 450, Edificio Conservatorio, Sala de Conciertos Judá.
+                  Col. 14 de Diciembre, Avenida Morazán casa 14-10, Sonsonate, Sonsonate, El Salvador.
                 </p>
               </div>
 
@@ -1035,7 +1156,7 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
                   Teléfono & WhatsApp Académico
                 </h4>
                 <p className="text-xs text-stone-600 leading-relaxed">
-                  +502 5555-1234 • Consultas directas de 08:00 a 20:00 hrs.
+                  +503 77573023 • Consultas directas de 08:00 a 20:00 hrs.
                 </p>
               </div>
 
@@ -1084,18 +1205,18 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
                   />
                 </div>
 
-                <div className="space-y-1">
+                <div className="space-y-1 sm:col-span-2">
                   <label className="text-stone-700 font-semibold">Teléfono / WhatsApp</label>
-                  <input
-                    type="tel"
+                  <InternationalPhoneInput
                     value={contactForm.telefono}
-                    onChange={(e) => setContactForm({ ...contactForm, telefono: e.target.value })}
-                    placeholder="+502 ..."
-                    className="w-full border border-stone-300 rounded-xl px-3.5 py-2.5 text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-xs"
+                    onChange={(val) => setContactForm({ ...contactForm, telefono: val })}
+                    placeholder="7757-3023"
+                    theme="light"
+                    className="border border-stone-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500"
                   />
                 </div>
 
-                <div className="space-y-1">
+                <div className="sm:col-span-2 space-y-1">
                   <label className="text-stone-700 font-semibold">Instrumento</label>
                   <select
                     value={contactForm.instrumento}
@@ -1106,6 +1227,9 @@ export const HomeCatalogView: React.FC<HomeCatalogViewProps> = ({
                     <option value="Violín">Violín</option>
                     <option value="Guitarra">Guitarra</option>
                     <option value="Canto">Canto</option>
+                    <option value="Batería">Batería</option>
+                    <option value="Flauta">Flauta</option>
+                    <option value="Bajo Eléctrico">Bajo Eléctrico</option>
                   </select>
                 </div>
 

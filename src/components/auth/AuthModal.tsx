@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { AuthMode, UserRole } from '../../types';
 import { JudaLogo } from '../common/JudaLogo';
+import { InternationalPhoneInput } from '../common/InternationalPhoneInput';
 import { 
   X, 
   Mail, 
@@ -14,7 +15,8 @@ import {
   AlertCircle, 
   CheckCircle, 
   Sparkles,
-  KeyRound
+  KeyRound,
+  FileText
 } from 'lucide-react';
 
 interface AuthModalProps {
@@ -43,11 +45,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [instrument, setInstrument] = useState('Piano');
+  const [phone, setPhone] = useState('+503 ');
+  const [documentId, setDocumentId] = useState('');
+  const [guardianName, setGuardianName] = useState('');
+  const [instrument, setInstrument] = useState('Piano & Teclados');
   const [loading, setLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [validationMsg, setValidationMsg] = useState<string | null>(null);
+
+  // Pre-load from enrollment form if pending
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      const stored = sessionStorage.getItem('pending_enrollment');
+      if (stored) {
+        const data = JSON.parse(stored);
+        if (data.nombre) setDisplayName(data.nombre);
+        if (data.email) setEmail(data.email);
+        if (data.telefono) setPhone(data.telefono);
+        if (data.documentoIdentidad) setDocumentId(data.documentoIdentidad);
+        if (data.tutorResponsable) setGuardianName(data.tutorResponsable);
+        if (data.instrumento) {
+          const match = instrumentsList.find(i => i.toLowerCase().includes(data.instrumento.toLowerCase()));
+          if (match) setInstrument(match);
+        }
+        if (initialMode === 'register') {
+          setMode('register');
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
@@ -84,6 +113,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setLoading(false);
           return;
         }
+        if (!documentId.trim()) {
+          setValidationMsg('Por favor ingresa tu DUI o Pasaporte.');
+          setLoading(false);
+          return;
+        }
         if (password.length < 6) {
           setValidationMsg('La contraseña debe tener mínimo 6 caracteres.');
           setLoading(false);
@@ -94,7 +128,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setLoading(false);
           return;
         }
-        await registerWithEmail(email, password, displayName, instrument, phone);
+        await registerWithEmail(
+          email, 
+          password, 
+          displayName, 
+          instrument, 
+          phone, 
+          documentId, 
+          guardianName
+        );
+        try {
+          sessionStorage.removeItem('pending_enrollment');
+        } catch {
+          // ignore
+        }
         onClose();
       } else if (mode === 'forgot-password') {
         if (!email) {
@@ -152,7 +199,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
           
           <p className="text-xs text-amber-200/90 mt-1">
-            Conservatorio & Academia de Música • Portal Central
+            Plataforma Educativa Segura | Integrada con Google Workspace
           </p>
         </div>
 
@@ -190,7 +237,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
             <div>
               <strong className="font-semibold block">Control Estricto de Roles:</strong>
-              El inicio de sesión (incluido Google) asigna rol de <em>Alumno</em> por defecto. Los roles de Profesor o Administrador se verifican criptográficamente en la base de datos de la Academia.
+              El inicio de sesión (incluido Google) asigna rol de <em>Alumno</em> por defecto. Los roles de Profesor o Administrador son asignados por la Dirección Académica.
             </div>
           </div>
 
@@ -232,37 +279,62 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
-                      Instrumento Principal
-                    </label>
-                    <select
-                      value={instrument}
-                      onChange={(e) => setInstrument(e.target.value)}
-                      className="w-full px-2.5 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
-                    >
-                      {instrumentsList.map((inst) => (
-                        <option key={inst} value={inst}>{inst}</option>
-                      ))}
-                    </select>
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    DUI o Pasaporte (Documento de Identidad) *
+                  </label>
+                  <div className="relative">
+                    <FileText className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      value={documentId}
+                      onChange={(e) => setDocumentId(e.target.value)}
+                      placeholder="Ej. 01234567-8 o N° Pasaporte"
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    />
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-stone-700 mb-1">
-                      Teléfono / WhatsApp
-                    </label>
-                    <div className="relative">
-                      <Phone className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+502 1234-5678"
-                        className="w-full pl-8 pr-2 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                    </div>
-                  </div>
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    Teléfono / WhatsApp *
+                  </label>
+                  <InternationalPhoneInput
+                    value={phone}
+                    onChange={(val) => setPhone(val)}
+                    placeholder="7757-3023"
+                    className="border border-stone-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    Instrumento Principal
+                  </label>
+                  <select
+                    value={instrument}
+                    onChange={(e) => setInstrument(e.target.value)}
+                    className="w-full px-2.5 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                  >
+                    {instrumentsList.map((inst) => (
+                      <option key={inst} value={inst}>{inst}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    Nombre del padre, madre o tutor responsable
+                    <span className="text-stone-400 font-normal ml-1">(Opcional, para menores de edad)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={guardianName}
+                    onChange={(e) => setGuardianName(e.target.value)}
+                    placeholder="Ej. Carlos Hernández (Padre/Tutor)"
+                    className="w-full px-3 py-2 text-xs border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
                 </div>
               </>
             )}

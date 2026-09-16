@@ -3,9 +3,11 @@ import {
   collection, 
   onSnapshot, 
   doc, 
+  getDoc,
   updateDoc 
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { AcademicCourse, AcademicClass, ClassModality } from '../../types';
 import { 
   Video, 
@@ -33,6 +35,9 @@ interface AdminClassesTabProps {
 }
 
 export const AdminClassesTab: React.FC<AdminClassesTabProps> = ({ initialCourseFilter }) => {
+  const { currentUser, userProfile, loading: authLoading } = useAuth();
+  const isFacultyOrAdmin = userProfile?.role === 'admin' || userProfile?.role === 'superadmin' || userProfile?.role === 'teacher';
+
   const [courses, setCourses] = useState<AcademicCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -173,12 +178,31 @@ export const AdminClassesTab: React.FC<AdminClassesTabProps> = ({ initialCourseF
     e.preventDefault();
     if (!formData.title.trim()) return;
 
+    if (authLoading) {
+      alert('La autenticación se está cargando. Intenta en un momento.');
+      return;
+    }
+    if (!currentUser || !isFacultyOrAdmin) {
+      alert('No tienes permisos de administración.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (editingClass) {
         // Edit class in corresponding course and module
         const targetCourse = courses.find(c => c.id === editingClass.courseId);
-        if (!targetCourse) return;
+        if (!targetCourse) {
+          alert('El curso objetivo no existe en el cliente.');
+          return;
+        }
+
+        const docRef = doc(db, 'courses', editingClass.courseId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          alert(`Error: El curso seleccionado (ID: ${editingClass.courseId}) no existe en Firestore.`);
+          return;
+        }
 
         const updatedModules = (targetCourse.modules || []).map(m => {
           if (m.id !== editingClass.moduleId) return m;
@@ -207,13 +231,23 @@ export const AdminClassesTab: React.FC<AdminClassesTabProps> = ({ initialCourseF
           };
         });
 
-        await updateDoc(doc(db, 'courses', editingClass.courseId), {
+        await updateDoc(docRef, {
           modules: updatedModules
         });
       } else {
         // Create new class in selected module
         const targetCourse = courses.find(c => c.id === formCourseId);
-        if (!targetCourse) return;
+        if (!targetCourse) {
+          alert('Por favor selecciona un curso válido.');
+          return;
+        }
+
+        const docRef = doc(db, 'courses', formCourseId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          alert(`Error: El curso seleccionado no existe en Firestore. Créalo primero.`);
+          return;
+        }
 
         const newClass: AcademicClass = {
           id: `class-${Date.now()}`,
@@ -254,7 +288,7 @@ export const AdminClassesTab: React.FC<AdminClassesTabProps> = ({ initialCourseF
           };
         });
 
-        await updateDoc(doc(db, 'courses', formCourseId), {
+        await updateDoc(docRef, {
           modules: updatedModules
         });
       }
@@ -272,7 +306,18 @@ export const AdminClassesTab: React.FC<AdminClassesTabProps> = ({ initialCourseF
   };
 
   const handleDelete = async (courseId: string, moduleId: string, classId: string) => {
+    if (authLoading || !currentUser || !isFacultyOrAdmin) {
+      alert('No tienes permisos para eliminar clases.');
+      return;
+    }
     if (confirm('¿Eliminar esta clase del módulo académico?')) {
+      const docRef = doc(db, 'courses', courseId);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        alert('Error: El curso no existe en Firestore.');
+        return;
+      }
+
       const targetCourse = courses.find(c => c.id === courseId);
       if (!targetCourse) return;
 
@@ -285,7 +330,7 @@ export const AdminClassesTab: React.FC<AdminClassesTabProps> = ({ initialCourseF
       });
 
       try {
-        await updateDoc(doc(db, 'courses', courseId), {
+        await updateDoc(docRef, {
           modules: updatedModules
         });
       } catch (err) {
@@ -585,7 +630,7 @@ export const AdminClassesTab: React.FC<AdminClassesTabProps> = ({ initialCourseF
               {/* Google Workspace & Evaluation */}
               <div className="p-3 bg-stone-50 rounded-2xl border border-stone-200 space-y-2.5">
                 <span className="font-bold text-stone-800 text-[11px] block">
-                  Satélite Workspace & Evaluación
+                  Google Workspace & Evaluación
                 </span>
                 <div className="grid grid-cols-2 gap-3">
                   <div>

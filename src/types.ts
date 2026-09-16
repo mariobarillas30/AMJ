@@ -27,6 +27,9 @@ export interface UserProfile {
   googleServices?: GoogleServicesConfig;
   bio?: string;
   birthDate?: string;
+  notes?: string;
+  documentId?: string; // DUI o Pasaporte (requerido en matrícula)
+  guardianName?: string; // Nombre del padre, madre o tutor responsable (menores de edad)
 }
 
 export interface AdminRecord {

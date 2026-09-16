@@ -4,10 +4,12 @@ import {
   onSnapshot, 
   doc, 
   setDoc, 
+  getDoc,
   updateDoc, 
   deleteDoc 
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { AcademicCourse } from '../../types';
 import { 
   Plus, 
@@ -32,6 +34,9 @@ interface AdminCoursesTabProps {
 }
 
 export const AdminCoursesTab: React.FC<AdminCoursesTabProps> = ({ onSelectCourseForClasses }) => {
+  const { currentUser, userProfile, loading: authLoading } = useAuth();
+  const isFacultyOrAdmin = userProfile?.role === 'admin' || userProfile?.role === 'superadmin' || userProfile?.role === 'teacher';
+
   const [courses, setCourses] = useState<AcademicCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -142,25 +147,59 @@ export const AdminCoursesTab: React.FC<AdminCoursesTabProps> = ({ onSelectCourse
     e.preventDefault();
     if (!formData.title.trim()) return;
 
+    if (authLoading) {
+      alert('La autenticación se está verificando. Por favor reintenta en un momento.');
+      return;
+    }
+    if (!currentUser || !isFacultyOrAdmin) {
+      alert('No tienes permisos de administración para realizar esta acción.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       if (editingCourse) {
         // Edit existing in Firestore
-        await updateDoc(doc(db, 'courses', editingCourse.id), {
-          title: formData.title.trim(),
-          description: formData.description,
-          instrument: formData.instrument,
-          teacherName: formData.teacherName,
-          teacherId: formData.teacherId,
-          modality: formData.modality,
-          schedule: formData.schedule,
-          priceMonthly: Number(formData.priceMonthly) || 0,
-          status: formData.status,
-          meetUrl: formData.meetUrl || '',
-          meetCode: formData.meetCode || '',
-          driveFolderId: formData.driveFolderId || '',
-          classroomCourseId: formData.classroomCourseId || ''
-        });
+        const docRef = doc(db, 'courses', editingCourse.id);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+          // Document does not exist in Firestore - create via setDoc to prevent "No document to update"
+          const newCourseObj: AcademicCourse = {
+            id: editingCourse.id,
+            title: formData.title.trim(),
+            description: formData.description,
+            instrument: formData.instrument,
+            teacherName: formData.teacherName,
+            teacherId: formData.teacherId,
+            modality: formData.modality,
+            schedule: formData.schedule,
+            priceMonthly: Number(formData.priceMonthly) || 0,
+            status: formData.status,
+            meetUrl: formData.meetUrl || '',
+            meetCode: formData.meetCode || '',
+            driveFolderId: formData.driveFolderId || '',
+            classroomCourseId: formData.classroomCourseId || '',
+            modules: editingCourse.modules || []
+          };
+          await setDoc(docRef, newCourseObj);
+        } else {
+          await updateDoc(docRef, {
+            title: formData.title.trim(),
+            description: formData.description,
+            instrument: formData.instrument,
+            teacherName: formData.teacherName,
+            teacherId: formData.teacherId,
+            modality: formData.modality,
+            schedule: formData.schedule,
+            priceMonthly: Number(formData.priceMonthly) || 0,
+            status: formData.status,
+            meetUrl: formData.meetUrl || '',
+            meetCode: formData.meetCode || '',
+            driveFolderId: formData.driveFolderId || '',
+            classroomCourseId: formData.classroomCourseId || ''
+          });
+        }
       } else {
         // Create new in Firestore
         const courseId = `course-${Date.now()}`;
@@ -201,6 +240,14 @@ export const AdminCoursesTab: React.FC<AdminCoursesTabProps> = ({ onSelectCourse
   };
 
   const handleDelete = async (id: string) => {
+    if (authLoading) {
+      alert('Verificando autenticación...');
+      return;
+    }
+    if (!currentUser || !isFacultyOrAdmin) {
+      alert('No tienes permisos para eliminar cursos.');
+      return;
+    }
     if (confirm('¿Estás seguro de eliminar este curso del plan académico?')) {
       try {
         await deleteDoc(doc(db, 'courses', id));

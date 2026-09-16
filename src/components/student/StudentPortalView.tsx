@@ -309,27 +309,34 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({ onNavigate
         <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                Portal del Alumno
-              </span>
-              <span className="text-stone-400 text-xs font-serif italic">
-                Academia Musical Judá
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500 text-stone-950 font-serif font-bold text-xl flex items-center justify-center shadow-md">
-                {currentStudent.displayName.charAt(0)}
+          <div className="flex items-start gap-4">
+            <img
+              src="/logo-amj.png"
+              alt="Academia Musical Judá"
+              className="w-14 h-14 object-contain rounded-xl shadow-xs shrink-0 mt-1"
+            />
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  Portal del Alumno
+                </span>
+                <span className="text-stone-400 text-xs font-serif italic">
+                  Academia Musical Judá
+                </span>
               </div>
-              <div>
-                <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                  {currentStudent.displayName}
-                </h1>
-                <p className="text-xs sm:text-sm text-stone-400">
-                  {currentStudent.email} • Especialidad: <strong className="text-amber-400 font-semibold">{currentStudent.primaryInstrument || 'Piano'}</strong>
-                </p>
+
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-amber-500 text-stone-950 font-serif font-bold text-xl flex items-center justify-center shadow-md shrink-0">
+                  {currentStudent.displayName.charAt(0)}
+                </div>
+                <div>
+                  <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                    {currentStudent.displayName}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-stone-400">
+                    {currentStudent.email} • Especialidad: <strong className="text-amber-400 font-semibold">{currentStudent.primaryInstrument || 'Piano'}</strong>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -337,7 +344,7 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({ onNavigate
           {/* Quick Profile Switcher to test access gating */}
           <div className="bg-stone-800/90 border border-stone-700/80 rounded-2xl p-3.5 shrink-0 flex flex-col gap-2">
             <span className="text-[10px] uppercase tracking-wider text-stone-400 font-semibold">
-              Simulador de Perfil Alumno (FASE 10/11):
+              Simulador de Perfil Alumno:
             </span>
             <select
               value={selectedStudentId}
@@ -375,11 +382,11 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({ onNavigate
           </div>
           <div className="bg-stone-800/50 p-3 rounded-xl border border-stone-700/40">
             <span className="text-[10px] text-stone-400 uppercase tracking-wider block">Aulas Google Meet</span>
-            <strong className="text-base font-mono font-bold text-amber-400">Protegidas Zero-Trust</strong>
+            <strong className="text-base font-mono font-bold text-amber-400">Salas Privadas</strong>
           </div>
           <div className="bg-stone-800/50 p-3 rounded-xl border border-stone-700/40">
             <span className="text-[10px] text-stone-400 uppercase tracking-wider block">Material Urtext</span>
-            <strong className="text-base font-mono font-bold text-sky-400">Google Drive Gated</strong>
+            <strong className="text-base font-mono font-bold text-sky-400">Google Drive Verificado</strong>
           </div>
         </div>
       </div>
@@ -392,7 +399,7 @@ export const StudentPortalView: React.FC<StudentPortalViewProps> = ({ onNavigate
           <div className="flex items-start gap-2.5">
             <ShieldCheck className="w-5 h-5 text-amber-800 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">Principio Rector de Acceso Académico (FASE 10 & FASE 11)</p>
+              <p className="font-bold">Políticas y Control de Acceso Académico</p>
               <p className="text-[11px] text-amber-900/90 mt-0.5">
                 La matrícula determina el acceso soberano a clases, Google Meet, material de Drive, Classroom y videos grabados. <strong>Un alumno con matrícula vencida NO recibe acceso a contenido restringido aunque conserve un antiguo enlace de Google.</strong>
               </p>

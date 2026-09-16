@@ -12,7 +12,9 @@ import { AdminMaterialsTab } from './AdminMaterialsTab';
 import { AdminAcademicWorkspaceTab } from './AdminAcademicWorkspaceTab';
 import { AdminVideosTab } from './AdminVideosTab';
 import { AdminVirtualClassesTab } from './AdminVirtualClassesTab';
+import { AdminUsersTab } from './AdminUsersTab';
 import { RoleManagementView } from './RoleManagementView';
+import { AdminSitePhotosTab } from './AdminSitePhotosTab';
 import { 
   Building2, 
   BookOpen, 
@@ -30,10 +32,14 @@ import {
   UserCheck,
   Award,
   Film,
-  Radio
+  Radio,
+  UserCog,
+  Palette
 } from 'lucide-react';
 
 export type AdminTab = 
+  | 'usuarios'
+  | 'marca'
   | 'integraciones'
   | 'virtuales'
   | 'cursos'
@@ -51,7 +57,7 @@ interface AdminDashboardViewProps {
   initialTab?: AdminTab;
 }
 
-export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ initialTab = 'integraciones' }) => {
+export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ initialTab = 'usuarios' }) => {
   const { role, currentUser, previewAsRole } = useAuth();
   const [activeTab, setActiveTab] = useState<AdminTab>(initialTab);
   const [selectedCourseForClasses, setSelectedCourseForClasses] = useState<string | undefined>(undefined);
@@ -70,6 +76,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ initialT
   };
 
   const tabs: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'usuarios', label: 'Usuarios', icon: <UserCog className="w-4 h-4 text-amber-500" /> },
+    { id: 'marca', label: 'Fotos & Marca del Sitio', icon: <Palette className="w-4 h-4 text-purple-500" /> },
     { id: 'integraciones', label: 'Integraciones Workspace', icon: <Building2 className="w-4 h-4" /> },
     { id: 'virtuales', label: 'Clases Virtuales & Meet', icon: <Radio className="w-4 h-4 text-emerald-500" /> },
     { id: 'cursos', label: 'Cursos', icon: <BookOpen className="w-4 h-4" /> },
@@ -81,7 +89,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ initialT
     { id: 'videos', label: 'Videos & CDN', icon: <Film className="w-4 h-4" /> },
     { id: 'horarios', label: 'Horarios', icon: <Calendar className="w-4 h-4" /> },
     { id: 'material', label: 'Material', icon: <FolderOpen className="w-4 h-4" /> },
-    { id: 'roles', label: 'Roles & Permisos', icon: <ShieldCheck className="w-4 h-4" /> },
+    { id: 'roles', label: 'Roles & Permisos', icon: <ShieldCheck className="w-4 h-4 text-indigo-400" /> },
   ];
 
   return (
@@ -93,23 +101,30 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ initialT
         <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                Gobernanza Central
-              </span>
-              <span className="text-stone-400 text-xs font-serif italic">
-                Academia Musical Judá
-              </span>
-            </div>
-            
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Panel de Administración Académica
-            </h1>
+          <div className="flex items-start gap-4">
+            <img
+              src="/logo-amj.png"
+              alt="Academia Musical Judá"
+              className="w-14 h-14 object-contain rounded-xl shadow-xs shrink-0 mt-1"
+            />
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  Gobernanza Central
+                </span>
+                <span className="text-stone-400 text-xs font-serif italic">
+                  Academia Musical Judá
+                </span>
+              </div>
+              
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Panel de Administración Académica
+              </h1>
 
-            <p className="text-xs sm:text-sm text-stone-300 max-w-2xl leading-relaxed">
-              Gestión soberana de cursos, cuerpo docente, alumnado, clases, matrículas, parrilla de horarios, repositorio de partituras y estado de servicios satélite Google Workspace.
-            </p>
+              <p className="text-xs sm:text-sm text-stone-300 max-w-2xl leading-relaxed">
+                Gestión soberana de cursos, cuerpo docente, alumnado, clases, matrículas, parrilla de horarios, repositorio de partituras y estado de servicios satélite Google Workspace.
+              </p>
+            </div>
           </div>
 
           {/* Role Status & Role Switcher Simulator */}
@@ -150,7 +165,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ initialT
                       ? 'bg-amber-500 text-stone-950' 
                       : 'bg-stone-700 text-stone-300 hover:bg-stone-600'
                   }`}
-                  title="Solo auditoría de estado; no permite conectar ni alterar cuentas"
+                  title="Modo de consulta y supervisión; no permite conectar ni alterar cuentas maestras"
                 >
                   Admin Estándar
                 </button>
@@ -212,6 +227,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ initialT
 
       {/* Tab Content Rendering */}
       <div className="min-h-[500px]">
+        {activeTab === 'usuarios' && <AdminUsersTab />}
+        {activeTab === 'marca' && <AdminSitePhotosTab />}
         {activeTab === 'integraciones' && <AdminIntegrationsTab />}
         {activeTab === 'virtuales' && <AdminVirtualClassesTab />}
         {activeTab === 'cursos' && <AdminCoursesTab onSelectCourseForClasses={handleNavigateToClasses} />}
@@ -223,7 +240,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ initialT
         {activeTab === 'videos' && <AdminVideosTab />}
         {activeTab === 'horarios' && <AdminSchedulesTab />}
         {activeTab === 'material' && <AdminMaterialsTab />}
-        {activeTab === 'roles' && <RoleManagementView />}
+        {activeTab === 'roles' && <AdminUsersTab />}
       </div>
 
     </div>

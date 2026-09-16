@@ -227,7 +227,7 @@ export const AdminVirtualClassesTab: React.FC = () => {
         description: `Clase Virtual Oficial de la Academia Musical Judá.\nCátedra: ${targetCourse?.title}\nDocente: ${formTeacherName}\nMódulo: ${targetModule?.title}`,
         startDateTime,
         endDateTime,
-        timeZone: 'America/Guatemala',
+        timeZone: 'America/El_Salvador',
         teacherEmail: formTeacherEmail,
         teacherName: formTeacherName,
         students: attendeeStudents
@@ -556,7 +556,7 @@ export const AdminVirtualClassesTab: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-amber-100 text-amber-900 border border-amber-300">
-              FASE 13 • Integración Principal Google Meet
+              CLASES VIRTUALES CON GOOGLE MEET
             </span>
             <span className="text-xs text-stone-400 font-mono">
               APIs Oficiales Google Calendar v3 & Meet
@@ -1368,7 +1368,7 @@ export const AdminVirtualClassesTab: React.FC = () => {
             <div className="flex items-start justify-between pb-3 border-b border-stone-100">
               <div>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 uppercase">
-                  Auditoría Zero-Trust FASE 13
+                  Comprobación de Acceso Seguro
                 </span>
                 <h3 className="font-serif text-xl font-bold text-stone-900 mt-1">
                   Protección de Enlace Google Meet
@@ -1458,7 +1458,7 @@ export const AdminVirtualClassesTab: React.FC = () => {
                 onClick={() => setIsAuditModalOpen(false)}
                 className="px-4 py-2 bg-stone-900 text-white rounded-xl text-xs font-bold"
               >
-                Cerrar Auditoría
+                Cerrar Comprobación
               </button>
             </div>
           </div>

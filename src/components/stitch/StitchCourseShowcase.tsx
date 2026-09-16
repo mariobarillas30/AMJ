@@ -267,7 +267,7 @@ export const StitchCourseShowcase: React.FC<StitchCourseShowcaseProps> = ({
             {course.teacherName || 'Mtro. Carlos Vega'}
           </h3>
           <p className="text-xs sm:text-sm text-stone-600">
-            Pianista Concertista • Catedrático Conservatorio Nacional de Música
+            Pianista Concertista • Formación Musical Avanzada & Cátedra
           </p>
           <div className="flex items-center justify-center sm:justify-start gap-1 pt-1 text-amber-500">
             <div className="flex text-amber-400">

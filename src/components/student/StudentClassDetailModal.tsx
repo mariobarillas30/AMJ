@@ -360,7 +360,7 @@ export const StudentClassDetailModal: React.FC<StudentClassDetailModalProps> = (
                   <h5 className="font-bold text-sm">Masterclass en Video Premium</h5>
                 </div>
                 <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded">
-                  Streaming Tokenizado Zero-Trust
+                  Streaming Privado Protegido
                 </span>
               </div>
 
@@ -458,7 +458,7 @@ export const StudentClassDetailModal: React.FC<StudentClassDetailModalProps> = (
               </div>
 
               <span className="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono bg-stone-100 text-stone-700 border border-stone-200">
-                FASE 12 Zero-Trust
+                Streaming Protegido
               </span>
             </div>
 
@@ -694,7 +694,7 @@ export const StudentClassDetailModal: React.FC<StudentClassDetailModalProps> = (
             {/* Official Pedagogical Pipeline Banner */}
             <div className="bg-stone-900 text-white rounded-2xl p-4 border border-stone-800 space-y-3">
               <span className="text-[10px] font-mono text-amber-400 font-bold uppercase tracking-wider block">
-                Flujo Pedagógico Soberano (FASE 14)
+                Flujo Pedagógico Integrado
               </span>
 
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px]">

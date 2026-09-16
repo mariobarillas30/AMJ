@@ -106,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
           <JudaLogo size="md" variant="full" theme="light" className="h-10 sm:h-11" />
           <div className="hidden lg:block border-l border-stone-200 pl-3">
             <span className="text-[10px] uppercase font-bold tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-              Conservatorio & Artes
+              Formación Musical
             </span>
           </div>
         </div>
@@ -167,7 +167,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* Progreso Académico (FASE 09 - Fuente Principal) */}
+          {/* Progreso Académico */}
           <button
             onClick={() => onNavigate('academic-progress')}
             className={`px-3.5 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
@@ -177,10 +177,10 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
           >
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>Progreso FASE 09</span>
+            <span>Progreso Académico</span>
           </button>
 
-          {/* Admin Dashboard & Governance FASE 06 (Protected: Superadmin & Admin) */}
+          {/* Admin Dashboard (Protected: Superadmin & Admin) */}
           {currentUser && (role === 'superadmin' || role === 'admin') && (
             <button
               onClick={() => onNavigate('admin-dashboard')}
@@ -191,7 +191,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <Shield className="w-4 h-4 text-amber-500" />
-              <span>Panel Admin FASE 06</span>
+              <span>Panel Administrativo</span>
             </button>
           )}
 
@@ -210,7 +210,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* Security & Audit FASE 17 (Auditoría Final, Escalabilidad y Producción) */}
+          {/* Security & System Center */}
           <button
             onClick={() => onNavigate('security-audit')}
             className={`px-3.5 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
@@ -218,10 +218,10 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-amber-500/10 text-amber-900 font-semibold'
                 : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
             }`}
-            title="Centro de Auditoría FASE 17 & Salida a Producción"
+            title="Centro de Seguridad y Diagnóstico del Sistema"
           >
             <Shield className="w-4 h-4 text-amber-600" />
-            <span>Auditoría FASE 17</span>
+            <span>Seguridad del Sistema</span>
           </button>
         </nav>
 
@@ -303,11 +303,11 @@ export const Header: React.FC<HeaderProps> = ({
                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-stone-100 transition-colors"
                 title="Ver mi perfil seguro"
               >
-                {currentUser.photoURL ? (
+                {(userProfile?.photoURL || currentUser.photoURL) ? (
                   <img
-                    src={currentUser.photoURL}
+                    src={userProfile?.photoURL || currentUser.photoURL || undefined}
                     alt={currentUser.displayName || 'Avatar'}
-                    className="w-8 h-8 rounded-full border border-stone-300 object-cover"
+                    className="w-8 h-8 rounded-full border border-amber-500/40 object-cover bg-stone-900"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
@@ -353,6 +353,9 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-stone-200 bg-white px-4 py-3 space-y-2">
+          <div className="flex items-center gap-3 pb-3 mb-2 border-b border-stone-100">
+            <JudaLogo size="sm" variant="full" theme="light" showSubtitle={true} />
+          </div>
           <button
             onClick={() => { onNavigate('home'); setMobileMenuOpen(false); }}
             className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-50"
@@ -389,7 +392,7 @@ export const Header: React.FC<HeaderProps> = ({
                 className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-emerald-950 bg-emerald-50 flex items-center gap-2 border border-emerald-200"
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                Progreso FASE 09 (Fuente Principal)
+                Progreso Académico
               </button>
               {(role === 'superadmin' || role === 'admin') && (
                 <button
@@ -397,7 +400,7 @@ export const Header: React.FC<HeaderProps> = ({
                   className="w-full text-left px-3 py-2 rounded-md text-sm font-bold text-amber-950 bg-amber-50 flex items-center gap-2 border border-amber-200"
                 >
                   <Shield className="w-4 h-4 text-amber-600" />
-                  Panel Admin FASE 06 (Gestión Total)
+                  Panel Administrativo
                 </button>
               )}
               <button
@@ -412,7 +415,7 @@ export const Header: React.FC<HeaderProps> = ({
                 className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-stone-800 hover:bg-stone-50 flex items-center gap-2"
               >
                 <Shield className="w-4 h-4 text-amber-600" />
-                Auditoría FASE 17
+                Seguridad del Sistema
               </button>
               <button
                 onClick={() => { onNavigate('profile'); setMobileMenuOpen(false); }}

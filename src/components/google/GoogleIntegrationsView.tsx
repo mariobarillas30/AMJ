@@ -101,7 +101,7 @@ export const GoogleIntegrationsView: React.FC = () => {
           </div>
 
           <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/30 space-y-2">
-            <span className="text-[10px] font-mono text-sky-300 uppercase font-bold tracking-wider">Nivel 4 (Satélite)</span>
+            <span className="text-[10px] font-mono text-sky-300 uppercase font-bold tracking-wider">Google Workspace Híbrido</span>
             <h3 className="font-bold text-sm text-white">Google Workspace</h3>
             <p className="text-[11px] text-stone-300">
               Meet (En vivo), Drive (PDFs), Classroom (Tareas).
@@ -179,7 +179,7 @@ export const GoogleIntegrationsView: React.FC = () => {
       {/* Services Management Panel */}
       <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm space-y-6">
         <h3 className="font-serif text-lg font-bold text-stone-900">
-          Estado y Conexión de Servicios Satélite
+          Estado y Conexión de Servicios Google Workspace
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

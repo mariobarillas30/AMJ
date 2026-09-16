@@ -381,15 +381,15 @@ export const AdminEnrollmentsTab: React.FC<AdminEnrollmentsTabProps> = ({ presel
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-wider">
-                FASE 10 — GOBERNANZA DE MATRÍCULAS
+                CONTROL DE MATRÍCULAS
               </span>
               <span className="text-xs text-stone-400 font-serif italic">
-                Regla de Acceso Restringido
+                Regla de Acceso Institucional
               </span>
             </div>
 
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-white">
-              La Matrícula Determina el Acceso Soberano
+              La Matrícula Determina el Acceso Académico
             </h3>
 
             <p className="text-xs sm:text-sm text-stone-300 max-w-3xl leading-relaxed">
@@ -663,10 +663,10 @@ export const AdminEnrollmentsTab: React.FC<AdminEnrollmentsTabProps> = ({ presel
             <div className="flex items-center justify-between pb-3 border-b border-stone-100">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                  Auditoría de Acceso Institucional
+                  Diagnóstico de Acceso por Matrícula
                 </span>
                 <h3 className="font-serif text-xl font-bold text-stone-900 mt-1">
-                  Verificación Soberana de Recursos
+                  Verificación de Recursos Institucionales
                 </h3>
               </div>
               <button 
@@ -743,7 +743,7 @@ export const AdminEnrollmentsTab: React.FC<AdminEnrollmentsTabProps> = ({ presel
                   </div>
 
                   <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 text-stone-600 text-[11px] leading-relaxed">
-                    <strong>Principio de Seguridad FASE 10:</strong> Aunque el estudiante conserve un antiguo enlace a Google Meet o la carpeta de Google Drive en sus marcadores, los enlaces dinámicos de la academia no se generarán y los servicios del backend denegarán el acceso si la matrícula no está en estado activo vigente.
+                    <strong>Control de Acceso Institucional:</strong> Los enlaces dinámicos de la academia no se generarán y los servicios de la plataforma denegarán el acceso si la matrícula no está en estado activo vigente.
                   </div>
                 </div>
               );
@@ -754,7 +754,7 @@ export const AdminEnrollmentsTab: React.FC<AdminEnrollmentsTabProps> = ({ presel
                 onClick={() => setInspectEnrollment(null)}
                 className="px-5 py-2 bg-stone-900 text-white rounded-xl text-xs font-semibold hover:bg-stone-800"
               >
-                Cerrar Auditoría
+                Cerrar Diagnóstico
               </button>
             </div>
           </div>
@@ -928,7 +928,7 @@ export const AdminEnrollmentsTab: React.FC<AdminEnrollmentsTabProps> = ({ presel
               </div>
 
               <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20 text-[11px] text-stone-700 leading-relaxed">
-                <strong>Garantía FASE 10:</strong> La matrícula determina el acceso a clases, Google Meet, material didáctico, Google Classroom y videos.
+                <strong>Políticas de Acceso:</strong> La matrícula determina el acceso a clases, Google Meet, material didáctico, Google Classroom y videos.
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-100">

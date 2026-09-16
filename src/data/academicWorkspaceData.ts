@@ -326,7 +326,7 @@ export const INITIAL_DRIVE_ACADEMIC_MATERIALS: DriveAcademicMaterial[] = [
   },
   {
     id: 'mat-drive-doc-02',
-    title: 'Reglamento de Evaluación, Asistencia y Certificación Conservatorio Judá',
+    title: 'Reglamento de Evaluación, Asistencia y Certificación Judá',
     category: 'documentos',
     categoryLabel: 'Documento Oficial',
     courseId: 'course-piano',

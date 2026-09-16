@@ -8,7 +8,7 @@
         "uid": { "type": "string", "maxLength": 128 },
         "email": { "type": "string", "maxLength": 200 },
         "displayName": { "type": "string", "maxLength": 100 },
-        "photoURL": { "type": "string", "maxLength": 500 },
+        "photoURL": { "type": "string", "maxLength": 300000 },
         "role": { "type": "string", "enum": ["superadmin", "admin", "teacher", "student"] },
         "phone": { "type": "string", "maxLength": 30 },
         "instrument": { "type": "string", "maxLength": 60 },

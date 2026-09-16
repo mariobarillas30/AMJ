@@ -129,7 +129,7 @@ export const AdminVideosTab: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
             <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5 animate-pulse" />
-              <span>FASE 12 — PROTECCIÓN DE VIDEOS PREMIUM</span>
+              <span>PROTECCIÓN DE CONTENIDO EN VIDEO</span>
             </span>
             <span className="px-3 py-1 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -438,7 +438,7 @@ export const AdminVideosTab: React.FC = () => {
           <div className="space-y-1">
             <h3 className="font-serif text-lg font-bold text-amber-400 flex items-center gap-2">
               <Terminal className="w-5 h-5 text-amber-400" />
-              <span>Suite de Validación Antipiratería (Auditoría Criptográfica FASE 12)</span>
+              <span>Suite de Validación de Streaming Seguro</span>
             </h3>
             <p className="text-xs text-stone-400">
               Ejecuta pruebas automáticas de penetración contra vectores comunes de robo de video (enlaces huérfanos, matrícula vencida, adulteración HMAC y acceso directo a disco).
@@ -505,7 +505,7 @@ export const AdminVideosTab: React.FC = () => {
           <div>
             <h3 className="font-serif text-lg font-bold text-stone-900 flex items-center gap-2">
               <Activity className="w-5 h-5 text-amber-600" />
-              <span>Sesiones Efímeras Activas & Registro de Auditoría de Video</span>
+              <span>Sesiones Efímeras Activas & Registro de Accesos a Video</span>
             </h3>
             <p className="text-xs text-stone-500">
               Monitoreo en tiempo real de tokens HMAC emitidos, validez restante y eventos de streaming.

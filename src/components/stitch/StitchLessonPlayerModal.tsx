@@ -326,7 +326,7 @@ export const StitchLessonPlayerModal: React.FC<StitchLessonPlayerModalProps> = (
                   {cls.teacher || course.teacherName || 'Maestro Carlos Vega'}
                 </strong>
                 <span className="text-xs text-stone-500">
-                  Cátedra de Piano Clásico & Jazz • Conservatorio Nacional
+                  Cátedra de Piano Clásico & Jazz • Formación Musical
                 </span>
               </div>
             </div>

@@ -329,23 +329,30 @@ export const TeacherPortalView: React.FC<TeacherPortalViewProps> = ({ onNavigate
         <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                Aula Docente • FASE 08
-              </span>
-              <span className="text-stone-400 text-xs font-serif italic">
-                Cátedra Autorizada
-              </span>
+          <div className="flex items-start gap-4">
+            <img
+              src="/logo-amj.png"
+              alt="Academia Musical Judá"
+              className="w-14 h-14 object-contain rounded-xl shadow-xs shrink-0 mt-1"
+            />
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  Portal Docente Institucional
+                </span>
+                <span className="text-stone-400 text-xs font-serif italic">
+                  Cátedra Autorizada
+                </span>
+              </div>
+
+              <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                {currentTeacher.displayName}
+              </h1>
+
+              <p className="text-xs sm:text-sm text-stone-300 max-w-xl leading-relaxed">
+                Especialidad: <strong className="text-emerald-400">{currentTeacher.instrument}</strong>. Gestión de cátedras autorizadas, programación de Google Meet, sincronización con Google Drive, tareas en Classroom, asistencia y evaluación.
+              </p>
             </div>
-
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              {currentTeacher.displayName}
-            </h1>
-
-            <p className="text-xs sm:text-sm text-stone-300 max-w-xl leading-relaxed">
-              Especialidad: <strong className="text-emerald-400">{currentTeacher.instrument}</strong>. Gestión de cátedras autorizadas, programación de Google Meet, sincronización con Google Drive, tareas en Classroom, asistencia y evaluación.
-            </p>
           </div>
 
           {/* Teacher Selector Simulator for RBAC testing */}

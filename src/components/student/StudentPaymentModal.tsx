@@ -175,7 +175,7 @@ export const StudentPaymentModal: React.FC<StudentPaymentModalProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono uppercase tracking-wider font-bold bg-amber-500/20 text-amber-900 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
-                FASE 11 • Pasarela Soberana
+                Pasarela de Pago Segura
               </span>
               {isRenewal && (
                 <span className="text-[11px] font-bold bg-red-100 text-red-800 border border-red-300 px-2.5 py-0.5 rounded-full">
@@ -203,10 +203,10 @@ export const StudentPaymentModal: React.FC<StudentPaymentModalProps> = ({
         <div className="p-3.5 bg-stone-900 text-stone-200 rounded-2xl border border-stone-800 text-xs space-y-1">
           <div className="flex items-center gap-2 font-bold text-amber-400">
             <ShieldCheck className="w-4 h-4" />
-            <span>Principio de Seguridad Zero-Trust</span>
+            <span>Garantía de Seguridad Institucional</span>
           </div>
-          <p className="text-[11px] text-stone-400 leading-relaxed font-mono">
-            «Nunca confíes en paid = true desde el navegador. La integración con Google no sustituye la lógica de pagos de la academia.»
+          <p className="text-[11px] text-stone-300 leading-relaxed font-sans">
+            Todos los comprobantes y transacciones son verificados por la Dirección Financiera de la Academia antes de la emisión de la matrícula oficial.
           </p>
         </div>
 
@@ -382,7 +382,7 @@ export const StudentPaymentModal: React.FC<StudentPaymentModalProps> = ({
             {verificationDetails && (
               <div className="bg-stone-900 text-left p-4 rounded-2xl text-[11px] text-stone-300 space-y-1 font-mono border border-stone-800">
                 <div className="text-amber-400 font-bold pb-1 border-b border-stone-800 flex items-center justify-between">
-                  <span>AUDITORÍA BACKEND</span>
+                  <span>COMPROBANTE DIGITAL</span>
                   <span>VERIFICADO ✓</span>
                 </div>
                 <div>ID Transacción: <span className="text-white">{verificationDetails.transactionId}</span></div>

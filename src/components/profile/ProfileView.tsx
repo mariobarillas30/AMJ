@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
+import { InternationalPhoneInput } from '../common/InternationalPhoneInput';
 import { 
   User, 
   Mail, 
@@ -19,8 +20,13 @@ import {
   Terminal, 
   Lock,
   ExternalLink,
-  Info
+  Info,
+  Camera,
+  UploadCloud,
+  Trash2,
+  FileText
 } from 'lucide-react';
+import { PhotoUploadModal } from './PhotoUploadModal';
 
 export const ProfileView: React.FC = () => {
   const { 
@@ -37,12 +43,26 @@ export const ProfileView: React.FC = () => {
 
   const [displayName, setDisplayName] = useState(userProfile?.displayName || currentUser?.displayName || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
+  const [documentId, setDocumentId] = useState(userProfile?.documentId || '');
+  const [guardianName, setGuardianName] = useState(userProfile?.guardianName || '');
   const [instrument, setInstrument] = useState(userProfile?.instrument || 'Piano & Teclados');
   const [bio, setBio] = useState(userProfile?.bio || '');
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyNotice, setVerifyNotice] = useState<string | null>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [photoSaveNotice, setPhotoSaveNotice] = useState<string | null>(null);
+
+  const activePhoto = userProfile?.photoURL || currentUser?.photoURL;
+
+  const handleSavePhoto = async (newPhotoURL: string | null) => {
+    await updateProfileData({
+      photoURL: newPhotoURL || undefined,
+    });
+    setPhotoSaveNotice(newPhotoURL ? '¡Foto de perfil actualizada exitosamente!' : 'Foto eliminada. Se han restaurado tus iniciales.');
+    setTimeout(() => setPhotoSaveNotice(null), 4000);
+  };
   
   // Anti-tampering simulation test state
   const [tamperingResult, setTamperingResult] = useState<any | null>(null);
@@ -87,6 +107,8 @@ export const ProfileView: React.FC = () => {
       await updateProfileData({
         displayName,
         phone,
+        documentId,
+        guardianName,
         instrument,
         bio,
       });
@@ -146,23 +168,69 @@ export const ProfileView: React.FC = () => {
           {/* Identity & Verified Role Card */}
           <div className="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm">
             <div className="text-center pb-6 border-b border-stone-100">
-              <div className="relative inline-block mb-3">
-                {currentUser?.photoURL ? (
+              {/* Interactive Avatar Container */}
+              <div 
+                className="relative inline-block mb-2 group cursor-pointer"
+                onClick={() => setIsPhotoModalOpen(true)}
+                title="Haz clic para cambiar o cargar tu foto de perfil"
+              >
+                {activePhoto ? (
                   <img
-                    src={currentUser.photoURL}
+                    src={activePhoto}
                     alt={displayName}
-                    className="w-20 h-20 rounded-full border-2 border-amber-500 object-cover shadow-sm mx-auto"
+                    className="w-24 h-24 rounded-full border-3 border-amber-500 object-cover shadow-md mx-auto transition-transform group-hover:scale-105 bg-stone-900"
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-stone-900 text-amber-400 font-bold text-2xl flex items-center justify-center mx-auto shadow-sm">
+                  <div className="w-24 h-24 rounded-full bg-stone-900 text-amber-400 font-bold text-3xl flex items-center justify-center mx-auto shadow-md border-3 border-stone-700 transition-transform group-hover:scale-105">
                     {(displayName || currentUser?.email || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="absolute bottom-0 right-0 p-1 bg-amber-500 text-white rounded-full border-2 border-white">
-                  <ShieldCheck className="w-3.5 h-3.5" />
+                
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 rounded-full bg-stone-950/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[11px] font-semibold">
+                  <Camera className="w-5 h-5 mb-0.5 text-amber-400" />
+                  <span>Cambiar</span>
+                </div>
+
+                {/* Badge button */}
+                <span className="absolute bottom-0 right-0 p-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-full border-2 border-white shadow-xs transition-colors">
+                  <Camera className="w-3.5 h-3.5" />
                 </span>
               </div>
+
+              {/* Photo Actions under Avatar */}
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setIsPhotoModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg text-xs font-semibold border border-amber-200 transition-colors shadow-2xs"
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Cargar Foto</span>
+                </button>
+
+                {activePhoto && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (window.confirm('¿Deseas eliminar tu foto de perfil actual y volver a tus iniciales?')) {
+                        await handleSavePhoto(null);
+                      }
+                    }}
+                    className="p-1 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
+                    title="Eliminar foto actual"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {photoSaveNotice && (
+                <div className="mb-3 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-[11px] font-medium animate-fadeIn">
+                  {photoSaveNotice}
+                </div>
+              )}
 
               <h2 className="font-serif text-lg font-bold text-stone-900">
                 {displayName || 'Usuario de la Academia'}
@@ -302,6 +370,64 @@ export const ProfileView: React.FC = () => {
               )}
             </div>
 
+            {/* Manual Profile Photo Banner in Form */}
+            <div className="p-4 mb-5 rounded-2xl border border-stone-200 bg-stone-50/70 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5 text-center sm:text-left">
+                <div 
+                  onClick={() => setIsPhotoModalOpen(true)}
+                  className="relative shrink-0 cursor-pointer group"
+                  title="Haz clic para cambiar tu foto"
+                >
+                  {activePhoto ? (
+                    <img
+                      src={activePhoto}
+                      alt={displayName}
+                      className="w-14 h-14 rounded-full border-2 border-amber-500 object-cover shadow-2xs group-hover:scale-105 transition-transform bg-stone-900"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-stone-900 text-amber-400 font-bold text-lg flex items-center justify-center shadow-2xs border-2 border-stone-700 group-hover:scale-105 transition-transform">
+                      {(displayName || currentUser?.email || 'U').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="absolute bottom-0 right-0 p-1 bg-amber-600 text-white rounded-full border border-white shadow-2xs">
+                    <Camera className="w-2.5 h-2.5" />
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 justify-center sm:justify-start">
+                    <h4 className="font-semibold text-sm text-stone-900">
+                      Foto de Perfil Personal
+                    </h4>
+                    {activePhoto ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        Personalizada
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-200 text-stone-700">
+                        Monograma AMJ
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-stone-500 mt-0.5">
+                    Sube manualmente tu foto desde tu dispositivo o ingresa un enlace web.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsPhotoModalOpen(true)}
+                  className="px-3.5 py-2 bg-stone-900 hover:bg-stone-800 text-amber-400 text-xs font-semibold rounded-xl transition-all shadow-xs flex items-center gap-1.5"
+                >
+                  <UploadCloud className="w-3.5 h-3.5" />
+                  <span>Cargar Foto</span>
+                </button>
+              </div>
+            </div>
+
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -346,18 +472,44 @@ export const ProfileView: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-700 mb-1">
-                    Teléfono / WhatsApp de Contacto
+                    DUI o Pasaporte (Documento de Identidad)
                   </label>
                   <div className="relative">
-                    <Phone className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <FileText className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+502 1234-5678"
+                      type="text"
+                      value={documentId}
+                      onChange={(e) => setDocumentId(e.target.value)}
+                      placeholder="Ej. 01234567-8 o N° Pasaporte"
                       className="w-full pl-9 pr-3 py-2 text-sm border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    Teléfono / WhatsApp de Contacto
+                  </label>
+                  <InternationalPhoneInput
+                    value={phone}
+                    onChange={(val) => setPhone(val)}
+                    placeholder="7757-3023"
+                    className="border border-stone-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-amber-500"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                    Nombre del Padre, Madre o Tutor Responsable
+                    <span className="text-stone-400 font-normal ml-1">(Para alumnos menores de edad)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={guardianName}
+                    onChange={(e) => setGuardianName(e.target.value)}
+                    placeholder="Ej. Carlos Hernández (Padre / Tutor Legal)"
+                    className="w-full px-3 py-2 text-sm border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
                 </div>
               </div>
 
@@ -401,7 +553,7 @@ export const ProfileView: React.FC = () => {
               </div>
 
               <div className="px-2.5 py-1 bg-stone-100 text-stone-700 text-xs font-medium rounded-full border border-stone-200">
-                Sistema Satélite
+                Google Workspace Activo
               </div>
             </div>
 
@@ -561,6 +713,15 @@ export const ProfileView: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Manual Photo Upload Modal */}
+      <PhotoUploadModal
+        isOpen={isPhotoModalOpen}
+        onClose={() => setIsPhotoModalOpen(false)}
+        currentPhotoURL={activePhoto}
+        displayName={displayName}
+        onSavePhoto={handleSavePhoto}
+      />
 
     </div>
   );

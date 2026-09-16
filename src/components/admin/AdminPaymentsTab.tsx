@@ -293,7 +293,7 @@ export const AdminPaymentsTab: React.FC = () => {
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
-              FASE 11 — ARQUITECTURA DE PAGOS
+              CONTROL DE PAGOS Y TRANSACCIONES
             </span>
             <span className="text-xs text-stone-400 font-serif italic">
               Validación Criptográfica en Servidor
@@ -399,14 +399,14 @@ export const AdminPaymentsTab: React.FC = () => {
                 className="w-full p-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:border-emerald-500 focus:outline-none capitalize"
               >
                 <option value="stripe">Stripe Checkout</option>
-                <option value="tarjeta">Visa / Mastercard (CYBERSOURCE)</option>
-                <option value="transferencia">Banca en Línea (BI / BAC)</option>
+                <option value="tarjeta">Visa / Mastercard (BAC / Wompi / CyberSource)</option>
+                <option value="transferencia">Banca en Línea El Salvador (Banco Agrícola / BAC / Cuscatlán / Transferencia 365 / Chivo)</option>
                 <option value="paypal">PayPal Gateway</option>
               </select>
             </div>
 
             <div>
-              <label className="block font-semibold text-stone-700 mb-1">Monto (GTQ)</label>
+              <label className="block font-semibold text-stone-700 mb-1">Monto (USD $)</label>
               <input
                 type="number"
                 value={customAmount}
@@ -645,7 +645,7 @@ export const AdminPaymentsTab: React.FC = () => {
                   {/* Monto */}
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     <span className="font-mono font-bold text-stone-900 text-xs">
-                      {pay.currency || 'GTQ'} {pay.amount.toFixed(2)}
+                      $ {pay.amount.toFixed(2)} {pay.currency || 'USD'}
                     </span>
                   </td>
 

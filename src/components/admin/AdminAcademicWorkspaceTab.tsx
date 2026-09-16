@@ -406,7 +406,7 @@ export const AdminAcademicWorkspaceTab: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono uppercase tracking-wider font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                FASE 14 — Integración Académica
+                INTEGRACIÓN ACADÉMICA WORKSPACE
               </span>
               <span className="text-stone-400 text-xs font-serif italic">
                 Google Drive & Google Classroom
@@ -599,7 +599,7 @@ export const AdminAcademicWorkspaceTab: React.FC = () => {
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-amber-400" />
                 <h4 className="font-serif text-sm font-bold text-white">
-                  Auditoría de Acceso a Google Drive: Prueba Soberana de Matrícula
+                  Verificación de Acceso a Google Drive: Comprobación de Matrícula
                 </h4>
               </div>
               <span className="text-[11px] font-mono text-stone-400">
@@ -790,7 +790,7 @@ export const AdminAcademicWorkspaceTab: React.FC = () => {
                 </h4>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Flujo Fase 14
+                Flujo Integrado
               </span>
             </div>
 

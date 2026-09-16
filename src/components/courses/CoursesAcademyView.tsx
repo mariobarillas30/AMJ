@@ -4,6 +4,7 @@ import {
   onSnapshot, 
   doc, 
   setDoc, 
+  getDoc,
   updateDoc,
   query,
   where
@@ -54,11 +55,12 @@ import {
   Trash2,
   Edit3,
   RefreshCw,
-  Radio
+  Radio,
+  AlertCircle
 } from 'lucide-react';
 
 export const CoursesAcademyView: React.FC = () => {
-  const { userProfile, currentUser } = useAuth();
+  const { userProfile, currentUser, loading: authLoading } = useAuth();
   const role = userProfile?.role || 'student';
   const isFacultyOrAdmin = role === 'admin' || role === 'superadmin' || role === 'teacher';
 
@@ -66,6 +68,9 @@ export const CoursesAcademyView: React.FC = () => {
   const [courses, setCourses] = useState<AcademicCourse[]>([]);
   const [loadingCourses, setLoadingCourses] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [courseError, setCourseError] = useState<string | null>(null);
+  const [isSeeding, setIsSeeding] = useState<boolean>(false);
+  const [seedSuccessMsg, setSeedSuccessMsg] = useState<string | null>(null);
 
   // Real-time Firestore enrollments state
   const [enrollments, setEnrollments] = useState<Record<string, StudentEnrollment>>({});
@@ -135,12 +140,13 @@ export const CoursesAcademyView: React.FC = () => {
   // Real-time Firestore onSnapshot Listener for courses collection
   useEffect(() => {
     setLoadingCourses(true);
+    setCourseError(null);
     const pathForOnSnapshot = 'courses';
     const coursesCol = collection(db, pathForOnSnapshot);
 
     const unsubscribe = onSnapshot(
       coursesCol,
-      async (snapshot) => {
+      (snapshot) => {
         setIsSyncing(true);
         if (!snapshot.empty) {
           const fetchedCourses: AcademicCourse[] = [];
@@ -166,31 +172,61 @@ export const CoursesAcademyView: React.FC = () => {
           });
 
           setCourses(fetchedCourses);
+          setCourseError(null);
           setLoadingCourses(false);
           setIsSyncing(false);
         } else {
-          // If Firestore collection is empty, seed initial courses so the academy has its courses in Firestore
-          try {
-            for (const initialCourse of INITIAL_ACADEMY_COURSES) {
-              await setDoc(doc(db, 'courses', initialCourse.id), initialCourse);
-            }
-          } catch (seedErr) {
-            console.warn('Firestore auto-seed fallback to initial courses:', seedErr);
-            setCourses(INITIAL_ACADEMY_COURSES);
-            setLoadingCourses(false);
-            setIsSyncing(false);
-          }
+          // Firestore collection is empty - NO SILENT MOCK FALLBACK
+          setCourses([]);
+          setCourseError(null);
+          setLoadingCourses(false);
+          setIsSyncing(false);
         }
       },
       (error) => {
         setIsSyncing(false);
         setLoadingCourses(false);
+        setCourses([]);
+        setCourseError(`Error al consultar Firestore (${error.code || 'permission-denied'}): ${error.message}`);
         handleFirestoreError(error, OperationType.GET, pathForOnSnapshot);
       }
     );
 
     return () => unsubscribe();
   }, []);
+
+  // Handler for administrative explicit seed
+  const handleExplicitSeedCourses = async () => {
+    if (authLoading) {
+      alert('La autenticación de Firebase Auth se está cargando. Por favor reintenta en un momento.');
+      return;
+    }
+    if (!currentUser) {
+      alert('Debes estar autenticado para sembrar los cursos iniciales en Firestore.');
+      return;
+    }
+    if (!isFacultyOrAdmin) {
+      alert('No tienes permisos de administración para escribir en Firestore.');
+      return;
+    }
+
+    setIsSeeding(true);
+    setCourseError(null);
+    setSeedSuccessMsg(null);
+
+    try {
+      for (const initialCourse of INITIAL_ACADEMY_COURSES) {
+        await setDoc(doc(db, 'courses', initialCourse.id), initialCourse);
+      }
+      setSeedSuccessMsg('Se han creado y sembrado exitosamente los 4 cursos iniciales en la colección /courses de Firestore.');
+    } catch (err: any) {
+      console.error('Error al sembrar cursos:', err);
+      setCourseError(`Error al escribir en Firestore: ${err.message || err}`);
+      handleFirestoreError(err, OperationType.CREATE, 'courses/seed');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   // Ensure an active course is selected once courses are loaded from Firestore
   useEffect(() => {
@@ -199,7 +235,7 @@ export const CoursesAcademyView: React.FC = () => {
     }
   }, [courses, selectedCourseId]);
 
-  const activeCourse = courses.find(c => c.id === selectedCourseId) || courses[0];
+  const activeCourse = courses.find(c => c.id === selectedCourseId) || courses[0] || null;
 
   const isEnrolledInActiveCourse = 
     isFacultyOrAdmin || 
@@ -275,6 +311,22 @@ export const CoursesAcademyView: React.FC = () => {
   const handleCreateModule = async () => {
     if (!newModuleTitle.trim() || !activeCourse) return;
 
+    if (authLoading) {
+      alert('La autenticación se está verificando. Intenta en un momento.');
+      return;
+    }
+    if (!currentUser || !isFacultyOrAdmin) {
+      alert('No tienes permisos administrativos para crear módulos.');
+      return;
+    }
+
+    const docRef = doc(db, 'courses', activeCourse.id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      alert(`Error: El curso "${activeCourse.title}" (ID: ${activeCourse.id}) no existe en Firestore. Créalo primero en el sistema de Cursos.`);
+      return;
+    }
+
     const newModule: AcademicModule = {
       id: 'mod-' + Date.now(),
       courseId: activeCourse.id,
@@ -287,7 +339,7 @@ export const CoursesAcademyView: React.FC = () => {
     const updatedModules = [...(activeCourse.modules || []), newModule];
 
     try {
-      await updateDoc(doc(db, 'courses', activeCourse.id), {
+      await updateDoc(docRef, {
         modules: updatedModules
       });
       setExpandedModules(prev => ({ ...prev, [newModule.id]: true }));
@@ -308,6 +360,22 @@ export const CoursesAcademyView: React.FC = () => {
   const handleSaveEditModule = async () => {
     if (!editingModule || !activeCourse || !editModuleTitle.trim()) return;
 
+    if (authLoading) {
+      alert('Verificando autenticación...');
+      return;
+    }
+    if (!currentUser || !isFacultyOrAdmin) {
+      alert('No tienes permisos para editar módulos.');
+      return;
+    }
+
+    const docRef = doc(db, 'courses', activeCourse.id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      alert(`Error: El curso "${activeCourse.title}" (ID: ${activeCourse.id}) no existe en Firestore.`);
+      return;
+    }
+
     const updatedModules = (activeCourse.modules || []).map(m => {
       if (m.id !== editingModule.id) return m;
       return {
@@ -318,7 +386,7 @@ export const CoursesAcademyView: React.FC = () => {
     });
 
     try {
-      await updateDoc(doc(db, 'courses', activeCourse.id), {
+      await updateDoc(docRef, {
         modules: updatedModules
       });
       setEditingModule(null);
@@ -330,12 +398,24 @@ export const CoursesAcademyView: React.FC = () => {
   const handleDeleteModule = async (moduleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (!activeCourse) return;
+    if (authLoading || !currentUser || !isFacultyOrAdmin) {
+      alert('No tienes permisos para eliminar módulos.');
+      return;
+    }
+
     if (!confirm('¿Eliminar este módulo académico y todas sus clases contenidas?')) return;
+
+    const docRef = doc(db, 'courses', activeCourse.id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      alert(`Error: El curso no existe en Firestore.`);
+      return;
+    }
 
     const updatedModules = (activeCourse.modules || []).filter(m => m.id !== moduleId);
 
     try {
-      await updateDoc(doc(db, 'courses', activeCourse.id), {
+      await updateDoc(docRef, {
         modules: updatedModules
       });
     } catch (err) {
@@ -345,6 +425,18 @@ export const CoursesAcademyView: React.FC = () => {
 
   const handleSaveClass = async (savedClass: AcademicClass) => {
     if (!activeCourse) return;
+
+    if (authLoading || !currentUser || !isFacultyOrAdmin) {
+      alert('No tienes permisos para guardar clases.');
+      return;
+    }
+
+    const docRef = doc(db, 'courses', activeCourse.id);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      alert(`Error: El curso "${activeCourse.title}" (ID: ${activeCourse.id}) no existe en Firestore. Créalo primero.`);
+      return;
+    }
 
     const updatedModules = (activeCourse.modules || []).map(mod => {
       if (mod.id !== savedClass.moduleId) return mod;
@@ -367,7 +459,7 @@ export const CoursesAcademyView: React.FC = () => {
     });
 
     try {
-      await updateDoc(doc(db, 'courses', activeCourse.id), {
+      await updateDoc(docRef, {
         modules: updatedModules
       });
       setIsFormModalOpen(false);
@@ -380,7 +472,18 @@ export const CoursesAcademyView: React.FC = () => {
 
   const handleDeleteClass = async (courseId: string, moduleId: string, classId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (authLoading || !currentUser || !isFacultyOrAdmin) {
+      alert('No tienes permisos para eliminar clases.');
+      return;
+    }
     if (!confirm('¿Estás seguro de eliminar esta clase de la estructura académica?')) return;
+
+    const docRef = doc(db, 'courses', courseId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      alert('Error: El curso no existe en Firestore.');
+      return;
+    }
 
     const courseToUpdate = courses.find(c => c.id === courseId);
     if (!courseToUpdate) return;
@@ -394,7 +497,7 @@ export const CoursesAcademyView: React.FC = () => {
     });
 
     try {
-      await updateDoc(doc(db, 'courses', courseId), {
+      await updateDoc(docRef, {
         modules: updatedModules
       });
     } catch (err) {
@@ -542,14 +645,61 @@ export const CoursesAcademyView: React.FC = () => {
               Selecciona un curso para inspeccionar sus módulos, clases y flujo virtual.
             </p>
 
+            {courseError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-2xl text-red-800 text-xs space-y-2">
+                <div className="flex items-center gap-2 font-bold text-red-900">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>Error de Lectura de Firestore</span>
+                </div>
+                <p>{courseError}</p>
+              </div>
+            )}
+
+            {seedSuccessMsg && (
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs space-y-1">
+                <div className="flex items-center gap-2 font-bold text-emerald-900">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Sincronización Completada</span>
+                </div>
+                <p>{seedSuccessMsg}</p>
+              </div>
+            )}
+
             {loadingCourses ? (
               <div className="py-10 flex flex-col items-center justify-center text-center space-y-2.5 bg-stone-50/70 rounded-2xl border border-stone-200/80">
                 <RefreshCw className="w-5 h-5 text-amber-600 animate-spin" />
                 <p className="text-xs text-stone-500 font-medium">Conectando y sincronizando con Firestore en tiempo real...</p>
               </div>
             ) : courses.length === 0 ? (
-              <div className="py-8 text-center text-xs text-stone-400 italic bg-stone-50 rounded-2xl border border-stone-200">
-                No se encontraron cursos en Firestore.
+              <div className="py-8 px-4 text-center space-y-4 bg-stone-50 rounded-2xl border border-stone-200">
+                <p className="text-xs text-stone-500 italic">
+                  La colección <code className="font-mono font-semibold">/courses</code> de Firestore está actualmente vacía.
+                </p>
+
+                {isFacultyOrAdmin && (
+                  <div className="space-y-2 pt-2 border-t border-stone-200/60">
+                    <p className="text-[11px] font-semibold text-stone-700">
+                      Como Administrador, puedes sembrar los cursos iniciales en la base de datos:
+                    </p>
+                    <button
+                      onClick={handleExplicitSeedCourses}
+                      disabled={isSeeding}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-colors disabled:opacity-50 shadow-xs"
+                    >
+                      {isSeeding ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Sembrando cursos en Firestore...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Inicializar Cursos Demo en Firestore</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-3">
